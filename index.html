@@ -1,0 +1,1952 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --f-bg-dark: #002A29;
+      --f-bg-light: #083d3b;
+      --f-bg-card: rgba(255, 255, 255, 0.05);
+      --f-accent: #e7755c;
+      --f-green: #22c55e;
+      --f-blue: #60a5fa;
+      --f-purple: #a855f7;
+      --f-grey-light: #e0e0e0;
+      --f-grey-medium: #a0a0a0;
+      --f-grey-border: rgba(255,255,255,0.1);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(231,117,92,0.08), transparent 35%),
+        radial-gradient(circle at 80% 10%, rgba(96,165,250,0.06), transparent 30%),
+        linear-gradient(180deg, #022f2e 0%, #002A29 100%);
+      color: var(--f-grey-light);
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    .container { max-width: 1280px; margin: 0 auto; }
+    .header {
+      margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--f-grey-border);
+    }
+    .logo { font-size: 1.7rem; font-weight: 700; letter-spacing: 0.28em; color: white; }
+    .logo-sub { font-size: 0.68rem; letter-spacing: 0.4em; color: var(--f-grey-medium); text-transform: uppercase; margin-top: 0.2rem; }
+    .report-title { font-size: 1.8rem; font-weight: 700; color: white; margin-top: 1rem; }
+    .report-subtitle { color: var(--f-grey-medium); font-size: 0.95rem; margin-top: 0.35rem; }
+
+    .loading, .error { text-align: center; padding: 3rem; }
+    .loading-spinner {
+      width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1);
+      border-top-color: var(--f-accent); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card, .metric-card, .pr-stat, .chart-section, .pr-section, .ranking-card, .spike-section {
+      background: var(--f-bg-card);
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.08);
+      backdrop-filter: blur(6px);
+    }
+    .stat-card { padding: 1.5rem; text-align: center; }
+    .stat-value { font-size: 2rem; font-weight: 700; color: var(--f-accent); }
+    .stat-value.green { color: var(--f-green); }
+    .stat-label { font-size: 0.8rem; color: var(--f-grey-medium); margin-top: 0.25rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .stat-change { font-size: 0.75rem; margin-top: 0.25rem; }
+    .stat-change.positive { color: var(--f-green); }
+    .stat-change.negative { color: #ef4444; }
+
+    .report-section { background: var(--f-bg-card); border-radius: 16px; border: 1px solid rgba(255,255,255,0.08); padding: 1.5rem; margin-bottom: 1.5rem; }
+    .report-section-title, .chart-title, .spike-title { font-size: 1.1rem; font-weight: 600; color: white; margin-bottom: 1rem; }
+    .top-properties-table, .data-table { width: 100%; border-collapse: collapse; }
+    .top-properties-table th, .data-table th {
+      text-align: left; padding: 0.75rem; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--f-grey-medium);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .top-properties-table td, .data-table td { padding: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.9rem; }
+    .top-properties-table tr:last-child td, .data-table tr:last-child td { border-bottom: none; }
+    .top-properties-table a, .data-table a, .property-path a, .pr-item-link a { color: var(--f-accent); text-decoration: none; }
+    .top-properties-table a:hover, .data-table a:hover, .property-path a:hover, .pr-item-link a:hover { text-decoration: underline; }
+    .property-url { font-size: 0.75rem; color: var(--f-grey-medium); }
+
+    .dashboard { display: block; }
+    .dashboard-header {
+      display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1.5rem;
+      padding: 1.25rem 0 0.25rem 0;
+    }
+    .property-image-wrapper { width: 120px; height: 90px; flex: 0 0 120px; border-radius: 14px; overflow: hidden; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); }
+    .property-image { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .property-title { font-size: 2.2rem; font-weight: 700; color: white; margin-bottom: 0.25rem; }
+    .property-path { color: var(--f-accent); }
+    .date-range-display { color: var(--f-grey-light); font-size: 0.95rem; white-space: nowrap; }
+    .property-info { flex: 1; }
+
+    .ranking-card {
+      display: flex; align-items: center; gap: 1rem; padding: 1.5rem; margin-bottom: 1.25rem;
+      background: linear-gradient(135deg, rgba(231,117,92,0.95), rgba(248,165,120,0.9));
+      color: white;
+    }
+    .ranking-icon { font-size: 2.5rem; }
+    .ranking-details { flex: 1; }
+    .ranking-title { font-size: 0.9rem; opacity: 0.95; margin-bottom: 0.15rem; }
+    .ranking-value { font-size: 1.9rem; font-weight: 700; }
+    .ranking-subtitle { font-size: 0.95rem; opacity: 0.95; margin-top: 0.25rem; }
+    .ranking-badge { background: rgba(255,255,255,0.18); border-radius: 999px; padding: 0.55rem 0.9rem; font-weight: 700; }
+
+    .metrics-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .metric-card { padding: 1.3rem; }
+    .metric-card.highlight { background: rgba(231,117,92,0.95); color: #10211f; }
+    .metric-label { color: var(--f-grey-medium); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .metric-card.highlight .metric-label { color: rgba(16,33,31,0.72); }
+    .metric-value { font-size: 2.25rem; font-weight: 700; margin-top: 0.55rem; }
+    .metric-subtitle { margin-top: 0.35rem; font-size: 0.78rem; color: var(--f-grey-medium); }
+    .metric-card.highlight .metric-subtitle { color: rgba(16,33,31,0.72); }
+    .property-story-metrics { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .property-story-metrics .metric-card {
+      background: rgba(255,255,255,0.035);
+      border-radius: 0;
+      padding: 0.9rem;
+    }
+    .property-story-metrics .metric-value { font-size: 1.65rem; }
+    .property-story-band { padding: 1.1rem 0; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .property-story-band:last-child { border-bottom: none; }
+    .property-story-band-title { margin: 0 0 0.75rem; font-size: 1rem; color: white; }
+    .property-story-current { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0.75rem; }
+    .property-story-current-label { color: var(--f-grey-medium); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .property-story-current-value { color: white; font-size: 0.9rem; margin-top: 0.2rem; overflow-wrap: anywhere; }
+    .property-story-coverage-notice {
+      margin-top: 1rem; padding: 0.85rem 1rem; border-left: 3px solid #f4c84a;
+      background: rgba(244,200,74,0.1); color: var(--f-grey-light); font-size: 0.82rem;
+    }
+    .property-story-coverage-notice strong { display: block; margin-bottom: 0.25rem; color: #ffe17d; }
+    .property-story-coverage-notice.overdue { border-left-color: #ff7664; background: rgba(255,118,100,0.1); }
+    .property-story-coverage-notice.overdue strong { color: #ff9d90; }
+    .property-story-primary-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.75rem; }
+    .property-story-metric { padding: 0.9rem; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.035); }
+    .property-story-metric-value { color: white; font-size: 1.65rem; font-weight: 700; }
+    .property-story-metric-label { color: var(--f-grey-medium); font-size: 0.68rem; text-transform: uppercase; margin-top: 0.2rem; }
+    .property-story-chart { height: 260px; position: relative; }
+    .property-story-activity-group { border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .property-story-activity-group:last-child { border-bottom: none; }
+    .property-story-activity-group > summary {
+      cursor: pointer; list-style: none; display: flex; justify-content: space-between;
+      align-items: center; gap: 0.75rem; padding: 0.9rem 0; color: white; font-weight: 700;
+    }
+    .property-story-activity-group > summary::-webkit-details-marker { display: none; }
+    .property-story-activity-group > summary::after { content: 'Show'; color: var(--f-grey-medium); font-size: 0.7rem; font-weight: 500; }
+    .property-story-activity-group[open] > summary::after { content: 'Hide'; }
+    .property-story-activity-count { color: var(--f-grey-medium); font-size: 0.72rem; font-weight: 500; margin-left: 0.35rem; }
+    .property-story-row { display: grid; grid-template-columns: 7rem 1fr auto; gap: 0.8rem; padding: 0.75rem 0; border-bottom: 1px solid rgba(255,255,255,0.06); align-items: start; }
+    .property-story-row-date { color: var(--f-grey-medium); font-size: 0.78rem; }
+    .property-story-row-title { color: white; font-size: 0.86rem; font-weight: 600; }
+    .property-story-row-detail { color: var(--f-grey-light); font-size: 0.76rem; margin-top: 0.18rem; }
+    .property-story-row-type { color: var(--f-grey-medium); font-size: 0.66rem; text-transform: uppercase; }
+    .property-story-caption { color: var(--f-grey-light); font-size: 0.76rem; margin-top: 0.3rem; }
+    .property-story-caption summary { cursor: pointer; color: var(--f-grey-medium); outline: none; }
+
+    .chart-section { padding: 1.5rem; margin-bottom: 1.5rem; }
+    .chart-container { height: 360px; position: relative; }
+    .two-column { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+
+    .spike-section { padding: 1.5rem; margin-bottom: 1.5rem; border-left: 4px solid var(--f-accent); }
+    .spike-header { display: flex; align-items: center; gap: 0.85rem; margin-bottom: 1rem; }
+    .spike-icon {
+      width: 36px; height: 36px; border-radius: 50%; background: rgba(231,117,92,0.18); color: var(--f-accent);
+      display: inline-flex; align-items: center; justify-content: center; font-weight: 700;
+    }
+    .spike-list { list-style: none; display: grid; gap: 1rem; }
+    .spike-item { padding: 1rem; border-radius: 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); }
+    .spike-date { font-size: 1.1rem; font-weight: 700; color: white; margin-bottom: 0.35rem; }
+    .spike-badge { margin-left: 0.5rem; background: rgba(34,197,94,0.2); color: #86efac; padding: 0.18rem 0.45rem; border-radius: 8px; font-size: 0.85rem; }
+    .spike-details { color: var(--f-grey-medium); font-size: 0.9rem; margin-bottom: 0.55rem; }
+    .spike-narrative { color: var(--f-grey-light); line-height: 1.5; margin-bottom: 0.6rem; }
+    .spike-pr-link { margin-top: 0.45rem; padding: 0.6rem 0.75rem; border-radius: 10px; background: rgba(231,117,92,0.13); border-left: 3px solid var(--f-accent); font-size: 0.9rem; }
+    .spike-pr-link-text { color: var(--f-grey-light); }
+    .spike-pr-link-pub { font-weight: 600; color: white; }
+    .no-spikes { color: var(--f-grey-medium); padding: 1rem 0; }
+
+    .pr-section { padding: 1.5rem; }
+    .pr-header { display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; margin-bottom: 1.25rem; }
+    .pr-title { font-size: 2rem; font-weight: 700; color: white; display: flex; gap: 0.7rem; align-items: center; }
+    .pr-title-icon { font-size: 1.7rem; }
+    .pr-sync-info { color: var(--f-grey-medium); font-size: 0.82rem; white-space: nowrap; }
+    .pr-stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+    .pr-stat { padding: 1.2rem; text-align: center; }
+    .pr-stat-value { font-size: 2.2rem; font-weight: 700; color: var(--f-accent); }
+    .pr-stat-label { margin-top: 0.35rem; color: var(--f-grey-medium); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .pr-stat-id { display: flex; flex-direction: column; justify-content: center; text-align: left; }
+    .pr-stat-id .pr-stat-value { font-size: 1.8rem; }
+    .pr-tabs { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1.2rem; }
+    .pr-tab {
+      background: transparent; color: var(--f-grey-light); border: none; padding: 0.55rem 0.9rem; border-radius: 10px; cursor: pointer; font: inherit;
+    }
+    .pr-tab.active { background: var(--f-accent); color: white; }
+    .pr-tab-count { margin-left: 0.4rem; color: inherit; opacity: 0.8; }
+    .pr-content { display: none; }
+    .pr-content.active { display: block; }
+    .pr-empty { padding: 2rem 0; text-align: center; color: var(--f-grey-medium); }
+    .pr-empty-icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
+    .pr-timeline { display: grid; gap: 0.75rem; }
+    .pr-item { padding: 1rem; border-radius: 12px; background: rgba(255,255,255,0.04); border-left: 4px solid var(--f-accent); }
+    .pr-item-header { display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; margin-bottom: 0.35rem; }
+    .pr-item-publication { color: white; font-weight: 700; }
+    .pr-item-date { color: var(--f-grey-medium); font-size: 0.9rem; white-space: nowrap; }
+    .pr-item-theme { color: var(--f-grey-light); margin-bottom: 0.35rem; }
+    .pr-not-found { padding: 2rem; text-align: center; color: var(--f-grey-medium); }
+    .pr-not-found-icon { font-size: 2rem; margin-bottom: 0.7rem; }
+
+    .alert-strip {
+      background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.35); color: #fecaca; border-radius: 8px;
+      padding: 0.55rem 0.75rem; font-size: 0.78rem; line-height: 1.4; margin-bottom: 1rem;
+    }
+
+    .sm-stats-bar {
+      display: flex; gap: 0; margin-top: 0.45rem; border-radius: 8px; overflow: hidden;
+      background: rgba(0,0,0,0.16); border: 1px solid rgba(255,255,255,0.08);
+    }
+    .sm-stats-bar > div { flex: 1; text-align: center; padding: 0.45rem 0.25rem; border-right: 1px solid rgba(255,255,255,0.06); }
+    .sm-stats-bar > div:last-child { border-right: none; }
+    .sm-stat-val { font-size: 0.9rem; font-weight: 700; color: var(--f-grey-light); }
+    .sm-stat-lbl { font-size: 0.56rem; color: var(--f-grey-medium); text-transform: uppercase; letter-spacing: 0.3px; }
+
+    .footer { text-align: center; padding: 2rem; color: var(--f-grey-medium); font-size: 0.8rem; }
+
+    .cp-accordion { display: block; }
+    .cp-accordion-summary {
+      list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between;
+      gap: 1rem; margin-bottom: 1rem;
+    }
+    .cp-accordion-summary::-webkit-details-marker { display: none; }
+    .cp-accordion-arrow { color: var(--f-grey-medium); font-size: 1.1rem; line-height: 1; transition: transform 0.15s ease; }
+    .cp-accordion[open] > .cp-accordion-summary .cp-accordion-arrow { transform: rotate(180deg); color: white; }
+    .cp-section-title { font-size: 1.5rem; font-weight: 700; color: white; margin: 0; }
+    .cp-badge { display: inline-block; padding: 0.12rem 0.42rem; border-radius: 999px; font-size: 0.7rem; font-weight: 600; }
+    .cp-status-ok { color: #86efac; }
+    .cp-status-warn { background: rgba(239,68,68,0.2); color: #fca5a5; }
+    .cp-gap-row td { background: rgba(249,115,22,0.05); color: #f97316; font-size: 0.75rem; }
+    .cp-group-title {
+      list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem;
+      border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); margin-bottom: 0.5rem;
+      background: rgba(255,255,255,0.04); color: white; font-weight: 600;
+    }
+    .cp-group-title::-webkit-details-marker { display: none; }
+    .cp-group-arrow { margin-left: auto; color: var(--f-grey-medium); font-size: 1rem; line-height: 1; transition: transform 0.15s ease; }
+    .cp-group-accordion[open] > .cp-group-title .cp-group-arrow { transform: rotate(180deg); color: white; }
+    .cp-note-row td { padding-top: 0; color: #fbbf24; font-size: 0.8rem; }
+    .cp-calendar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 0.9rem;
+    }
+    .cp-day-card {
+      min-height: 240px;
+      padding: 0.85rem;
+      border-radius: 14px;
+      background: rgba(8,61,59,0.72);
+      border: 1px solid rgba(255,255,255,0.12);
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+    .cp-day-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0.6rem;
+      padding-bottom: 0.6rem;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .cp-day-title { font-size: 1rem; font-weight: 800; color: white; }
+    .cp-day-date { color: var(--f-grey-medium); font-size: 0.78rem; white-space: nowrap; }
+    .cp-slot {
+      padding: 0.55rem;
+      border-radius: 10px;
+      background: rgba(0,0,0,0.12);
+      border: 1px dashed rgba(255,255,255,0.1);
+    }
+    .cp-slot-label {
+      color: #93c5fd;
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 0.38rem;
+    }
+    .cp-empty-slot { color: rgba(255,255,255,0.28); font-size: 0.72rem; }
+    .cp-post-card {
+      border-left: 3px solid var(--f-accent);
+      border-radius: 8px;
+      padding: 0.5rem 0.55rem;
+      background: #334155;
+      margin-bottom: 0.4rem;
+    }
+    .cp-post-card.facebook {
+      border-left-color: #1877f2;
+      background: linear-gradient(135deg, #174f78, #123d61);
+    }
+    .cp-post-card.instagram {
+      border-left-color: #e1306c;
+      background: linear-gradient(135deg, #4d236f 0%, #7a274d 55%, #7a4526 100%);
+    }
+    .cp-post-card.linkedin {
+      border-left-color: #0a66c2;
+      background: linear-gradient(135deg, #0b4a73, #083859);
+    }
+    .cp-post-card.tiktok {
+      border-left-color: #000000;
+      background: linear-gradient(135deg, #000000, #111111);
+    }
+    .cp-post-card.newsletter {
+      border-left-color: #8b5cf6;
+      background: linear-gradient(135deg, #4c3375, #3e225f);
+    }
+    .cp-post-card:last-child { margin-bottom: 0; }
+    .cp-post-title { color: white; font-weight: 800; font-size: 0.86rem; line-height: 1.25; }
+    .cp-post-meta { color: rgba(255,255,255,0.76); font-size: 0.74rem; margin-top: 0.18rem; line-height: 1.35; }
+    .cp-platform {
+      display: inline-block;
+      padding: 0.12rem 0.38rem;
+      border-radius: 5px;
+      background: #1877f2;
+      color: white;
+      font-size: 0.66rem;
+      font-weight: 800;
+      margin-top: 0.32rem;
+    }
+    .cp-platform.instagram { background: linear-gradient(135deg, #833ab4, #e1306c, #f77737); }
+    .cp-platform.linkedin { background: #0a66c2; }
+    .cp-platform.tiktok { background: #000000; }
+    .cp-platform.newsletter { background: #8b5cf6; }
+    .cp-reason {
+      display: inline-block;
+      margin-left: 0.25rem;
+      padding: 0.12rem 0.38rem;
+      border-radius: 5px;
+      font-size: 0.62rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      border: 1px solid rgba(96,165,250,0.28);
+      color: #bfdbfe;
+      background: rgba(59,130,246,0.16);
+    }
+    .cp-reason.price { color: #fde047; background: rgba(251,191,36,0.18); border-color: rgba(251,191,36,0.32); }
+    .cp-attention { margin-top: 0.32rem; color: #fca5a5; font-size: 0.7rem; font-weight: 700; }
+
+    @media (max-width: 980px) {
+      .metrics-grid, .pr-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .property-story-current { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .property-story-primary-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .two-column { grid-template-columns: 1fr; }
+      .dashboard-header { flex-direction: column; align-items: flex-start; }
+      .property-title { font-size: 1.8rem; }
+    }
+
+    @media (max-width: 720px) {
+      body { padding: 1rem; }
+      .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .ranking-card { flex-direction: column; align-items: flex-start; }
+      .pr-item-header { flex-direction: column; }
+      .chart-container { height: 280px; }
+      .cp-calendar { grid-template-columns: 1fr; }
+      .property-story-current { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .property-story-row { grid-template-columns: 1fr; gap: 0.25rem; }
+      .property-story-row-type { margin-top: 0.15rem; }
+    }
+
+    /* ===== Client marketing report (reportType 'clientReport') ===== */
+    body.client-report {
+      padding: 0;
+      background: #F6F3EE;
+      color: #0E2524;
+      font-family: 'Manrope', system-ui, sans-serif;
+    }
+    body.client-report .num, .cr .num { font-variant-numeric: tabular-nums; }
+    .cr a { color: #B8462C; text-underline-offset: 3px; }
+    .cr a:hover { color: #8F3520; }
+    .cr-serif { font-family: 'Fraunces', Georgia, serif; font-weight: 400; }
+    .cr-hero { background: #002A29; color: #F3EFE8; }
+    .cr-wrap { max-width: 1120px; margin: 0 auto; padding: 0 40px; box-sizing: border-box; }
+    .cr-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding-top: 28px; }
+    .cr-logo { font-size: 20px; font-weight: 800; letter-spacing: 0.34em; color: #F3EFE8; }
+    /* Finest wordmark, inlined from Finest Assets/Logo/Finest Logo White.svg. */
+    .cr-logo-svg { display: block; width: 130px; height: auto; color: #F3EFE8; }
+    .cr-logo-sub { font-size: 10px; font-weight: 600; letter-spacing: 0.3em; color: #9DB4B0; text-transform: uppercase; margin-top: 2px; }
+    .cr-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .cr-btn { height: 44px; padding: 0 16px; border-radius: 22px; border: 1px solid #2B5E5A; background: transparent; color: #F3EFE8 !important; font: 600 13px 'Manrope', system-ui, sans-serif; text-decoration: none; display: inline-flex; align-items: center; cursor: pointer; }
+    .cr-btn:hover { background: rgba(255,255,255,0.06); }
+    .cr-hero-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 40px; align-items: end; padding-top: 44px; }
+    .cr-hero-text { display: flex; flex-direction: column; gap: 14px; padding-bottom: 44px; }
+    .cr-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+    .cr-pill { font-size: 12px; font-weight: 700; padding: 5px 12px; border-radius: 20px; border: 1px solid #2B5E5A; color: #D7DED9; }
+    .cr-pill.accent { background: #E7755C; border-color: #E7755C; color: #002A29; }
+    .cr-title { margin: 0; font-family: 'Fraunces', Georgia, serif; font-weight: 300; font-size: 60px; line-height: 1.04; letter-spacing: -0.02em; color: #F3EFE8; }
+    .cr-headline { margin: 0; font-size: 19px; line-height: 1.6; color: #D7DED9; max-width: 34em; }
+    .cr-agent { font-size: 13px; color: #9DB4B0; }
+    .cr-photo { height: 350px; border-radius: 20px 20px 0 0; overflow: hidden; background: #0B3D3A; }
+    .cr-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .cr-main { display: flex; flex-direction: column; gap: 56px; padding-top: 48px; padding-bottom: 64px; }
+    .cr-section { display: flex; flex-direction: column; gap: 18px; }
+    .cr-h2 { margin: 0; font-family: 'Fraunces', Georgia, serif; font-weight: 400; font-size: 32px; line-height: 1.2; color: #0E2524; }
+    .cr-section-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+    .cr-muted { font-size: 14px; color: #3E5250; }
+    .cr-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); border-top: 2px solid #0E2524; border-bottom: 1px solid #D9D3C9; }
+    .cr-kpi { display: flex; flex-direction: column; gap: 6px; padding: 22px 16px; border-left: 1px solid #D9D3C9; }
+    .cr-kpi:first-child { border-left: 0; padding-left: 0; }
+    .cr-kpi-label { font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #5B6B69; }
+    .cr-kpi-value { font-family: 'Fraunces', Georgia, serif; font-size: 42px; line-height: 1.05; color: #0E2524; }
+    .cr-kpi-note { font-size: 13px; font-weight: 600; color: #3E5250; }
+    .cr-badge { display: flex; align-items: center; gap: 12px; background: #FBEFE9; border-radius: 14px; padding: 14px 18px; font-size: 15px; color: #0E2524; }
+    .cr-card { background: #FFFFFF; border: 1px solid #E4DED4; border-radius: 16px; }
+    .cr-chart-box { position: relative; height: 300px; padding: 20px 20px 12px; box-sizing: border-box; }
+    .cr-legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 13px; color: #3E5250; align-items: center; }
+    .cr-legend span { display: inline-flex; gap: 6px; align-items: center; }
+    .cr-dot { width: 12px; height: 12px; border-radius: 6px; display: inline-block; }
+    .cr-grid { display: grid; gap: 16px; }
+    .cr-grid.press { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); align-items: start; }
+    .cr-grid.social { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; align-items: start; }
+    .cr-grid.two { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 48px; align-items: start; }
+    .cr-press { overflow: hidden; display: flex; flex-direction: row; align-items: center; border-radius: 18px; }
+    /* Same portrait frame for every article image (3:4), cropped to fill. */
+    .cr-press-img { flex: 0 0 120px; width: 120px; height: 160px; align-self: stretch; background: #EDE7DD; overflow: hidden; }
+    .cr-press-img img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
+    .cr-press-body { flex: 1; min-width: 0; padding: 18px 20px; display: flex; flex-direction: column; gap: 8px; }
+    .cr-eyebrow { font-size: 12px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #B8462C; }
+    .cr-press-title { font-family: 'Fraunces', Georgia, serif; font-size: 20px; line-height: 1.3; color: #0E2524; }
+    .cr-subs { padding: 22px 24px; display: flex; flex-direction: column; gap: 12px; border-radius: 18px; }
+    .cr-subs-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); column-gap: 28px; }
+    .cr-subs-row { display: flex; justify-content: space-between; gap: 12px; align-items: center; padding: 11px 0; border-top: 1px solid #EEE8DF; }
+    .cr-featured { font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 10px; background: #E3F1E8; color: #1F5E3B; }
+    .cr-post { padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+    .cr-platform { font-size: 11px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; padding: 4px 9px; border-radius: 6px; color: #FFFFFF; background: #2F6461; }
+    .cr-platform.facebook { background: #1877F2; }
+    .cr-platform.instagram { background: linear-gradient(135deg, #833AB4, #E1306C, #F77737); }
+    .cr-platform.tiktok { background: #000000; }
+    .cr-platform.linkedin { background: #0A66C2; }
+    .cr-platform.newsletter { background: #7A5E2E; }
+    .cr-post-stats { display: flex; gap: 18px; flex-wrap: wrap; border-top: 1px solid #EEE8DF; padding-top: 10px; }
+    .cr-post-stat { display: flex; flex-direction: column; }
+    .cr-post-stat strong { font-size: 18px; font-weight: 800; color: #0E2524; }
+    .cr-post-stat span { font-size: 11px; font-weight: 600; color: #5B6B69; }
+    .cr-bar-row { display: flex; flex-direction: column; gap: 6px; }
+    .cr-bar-top { display: flex; justify-content: space-between; font-size: 14px; }
+    .cr-bar { height: 8px; border-radius: 4px; background: #E6E0D6; }
+    .cr-bar div { height: 8px; border-radius: 4px; }
+    .cr-big { padding: 22px; display: flex; flex-direction: column; gap: 10px; }
+    .cr-big-value { font-family: 'Fraunces', Georgia, serif; font-size: 48px; line-height: 1; color: #0E2524; }
+    .cr-upcoming { background: #002A29; color: #F3EFE8; border-radius: 20px; padding: 32px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px; }
+    .cr-upcoming-item { border-top: 1px solid #2B5E5A; padding-top: 14px; display: flex; flex-direction: column; gap: 4px; }
+    .cr-footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; font-size: 12px; color: #5B6B69; border-top: 1px solid #D9D3C9; padding-top: 22px; }
+    .cr-hidden { display: none !important; }
+
+    @media (max-width: 720px) {
+      .cr-wrap { padding: 0 20px; }
+      .cr-title { font-size: 40px; }
+      .cr-headline { font-size: 16px; }
+      .cr-hero-grid { padding-top: 28px; gap: 20px; }
+      .cr-hero-text { padding-bottom: 8px; }
+      .cr-photo { height: 220px; margin: 0 -20px; border-radius: 0; }
+      .cr-main { gap: 40px; padding-top: 28px; }
+      .cr-h2 { font-size: 25px; }
+      .cr-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); border-bottom: 0; }
+      .cr-kpi { border-left: 0; padding: 16px 0; border-bottom: 1px solid #D9D3C9; }
+      .cr-kpi-value { font-size: 32px; }
+      .cr-chart-box { height: 220px; padding: 12px 8px 8px; }
+      .cr-press-img { flex-basis: 96px; width: 96px; height: 128px; }
+      .cr-logo-svg { width: 108px; }
+      .cr-upcoming { padding: 22px; }
+    }
+
+    @media print {
+      body.client-report { background: #FFFFFF; }
+      .cr-actions { display: none !important; }
+      .cr-hero { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .cr-upcoming, .cr-platform, .cr-badge, .cr-bar div, .cr-pill.accent { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .cr-section, .cr-card, .cr-upcoming { break-inside: avoid; }
+      .cr-chart-box canvas { width: 100% !important; height: 100% !important; }
+      .cr-main { gap: 32px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">FINEST</div>
+      <div class="logo-sub"></div>
+      <h1 class="report-title" id="reportTitle">Loading report...</h1>
+      <p class="report-subtitle" id="reportSubtitle">Preparing snapshot</p>
+    </div>
+
+    <div id="content">
+      <div class="loading">
+        <div class="loading-spinner"></div>
+        <p>Loading report data...</p>
+      </div>
+    </div>
+
+    <div class="footer">Finest Analytics</div>
+  </div>
+
+  <script>
+    // This page runs in two places: inside Apps Script (token templated in,
+    // data via google.script.run) and on reports.finest.co.uk (token from the
+    // address, data fetched from the Apps Script web app without cookies).
+    var REPORT_DATA_URL = 'https://script.google.com/macros/s/AKfycbzK5CIMm6RgYUyt-6_7Ygmrtp7QmXUSYOi3beuqnZ1Zkxi3gxYGKS-1CwmOrun3w_vF/exec';
+    var reportToken = '<?= reportToken ?>';
+    if (!/^[A-Za-z0-9]{8,}$/.test(reportToken)) {
+      var reportParams = new URLSearchParams(window.location.search);
+      reportToken = reportParams.get('r') || reportParams.get('token') || '';
+    }
+    var trendChartInstance = null;
+    var channelChartInstance = null;
+    var currentPropertyData = null;
+    var currentPRData = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+      loadStoredReport();
+    });
+
+    function loadStoredReport() {
+      if (window.google && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(handleStoredReport)
+          .withFailureHandler(function(err) {
+            showError('Failed to load report: ' + err);
+          })
+          .getStoredReportData(reportToken);
+        return;
+      }
+      if (!/^[A-Za-z0-9]{8,}$/.test(reportToken)) {
+        showError('This report link is invalid or has expired.');
+        return;
+      }
+      fetch(REPORT_DATA_URL + '?format=json&token=' + encodeURIComponent(reportToken), { credentials: 'omit', redirect: 'follow' })
+        .then(function(response) { return response.json(); })
+        .then(handleStoredReport)
+        .catch(function() {
+          showError('We couldn\'t load this report just now. Please try again in a moment.');
+        });
+    }
+
+    function handleStoredReport(result) {
+          if (!result || !result.success) {
+            showError((result && result.error) || 'Failed to load report');
+            return;
+          }
+      var data = result.reportData || {};
+          if (data.agentColors) shareAgentColors = data.agentColors;
+          if (data.reportType === 'clientReport') {
+            displayClientReport(data, result);
+          } else if (data.reportType === 'propertyStory') {
+            displayPropertyStoryReport(data, result);
+          } else if (data.reportType === 'property') {
+            displayPropertyReport(data, result);
+          } else if (data.reportType === 'contentPlanning') {
+            displayContentPlanningReport(data, result);
+          } else {
+            displayMonthlyReport(data, result);
+          }
+    }
+
+    function displayContentPlanningReport(data, meta) {
+      document.getElementById('reportTitle').textContent = 'Content Planning';
+      var createdText = meta && meta.createdAt ? formatDisplayDateTime(meta.createdAt) : 'Unknown';
+      var expiresText = meta && meta.expiresAt ? formatDisplayDate(meta.expiresAt) : 'Unknown';
+      document.getElementById('reportSubtitle').textContent = 'Created ' + createdText + ' • expires ' + expiresText;
+
+      var scheduled = data.scheduledPosts || [];
+      var pushProperties = data.pushProperties || [];
+      var londonProperties = data.londonProperties || [];
+      var flaggedGroups = data.flaggedGroups || { 'Active Interest': [], 'Private': [], 'On Hold': [], 'No PR': [], 'No Social': [] };
+      var flaggedCount = data.flaggedCount || 0;
+
+      var html = '';
+
+      html += '<section class="report-section">';
+      html += '<details open class="cp-accordion">';
+      html += '<summary class="cp-accordion-summary"><span class="cp-section-title">📋 All Scheduled Posts (' + (data.scheduledCount || 0) + ')</span><span class="cp-accordion-arrow">▼</span></summary>';
+      html += renderContentPlanningCalendar(scheduled);
+      html += '</details></section>';
+
+      html += '<section class="report-section">';
+      html += '<details class="cp-accordion">';
+      html += '<summary class="cp-accordion-summary"><span class="cp-section-title" style="color:#38bdf8;">🚀 Properties Needing a Push (' + pushProperties.length + ')</span><span class="cp-accordion-arrow">▼</span></summary>';
+      html += '<p class="report-subtitle" style="margin-bottom:0.8rem;">Finest-only push list for staff distribution.</p>';
+      html += '<table class="data-table"><thead><tr><th>Property</th><th style="text-align:center;">Price</th><th>Agent</th><th style="text-align:center;">Listed</th><th style="text-align:center;">Last FB Feature</th><th style="text-align:center;">Status</th></tr></thead><tbody>';
+      for (var p = 0; p < pushProperties.length; p++) {
+        var item = pushProperties[p];
+        var urgencyBadgeStyle = 'background:#eab30822;color:#eab308;';
+        if (String(item.urgency || '').indexOf('Overdue') === 0) urgencyBadgeStyle = 'background:#f9731622;color:#f97316;';
+        else if (String(item.urgency || '') === 'Covered') urgencyBadgeStyle = 'background:#22c55e22;color:#22c55e;';
+        var statusHtml = item.scheduled
+          ? '<span class="cp-badge" style="background:#06b6d422;color:#06b6d4;">📅 ' + escapeHtml(item.scheduled.day || 'Scheduled') + '</span>'
+          : '<span class="cp-badge" style="' + urgencyBadgeStyle + '">' + escapeHtml(item.urgency || '—') + '</span>';
+        html += '<tr>';
+        html += '<td>' + (item.propertyUrl ? '<a href="' + escapeHtml(item.propertyUrl) + '" target="_blank">' + escapeHtml(item.propertyName) + '</a>' : escapeHtml(item.propertyName)) + ' <span class="property-url">' + escapeHtml(item.propertyId || '') + '</span></td>';
+        html += '<td style="text-align:center;">' + escapeHtml(item.guidePrice || '—') + '</td>';
+        html += '<td>' + escapeHtml(item.agent || '') + '</td>';
+        html += '<td style="text-align:center;">' + (item.weeksOnMarket != null ? escapeHtml(String(item.weeksOnMarket) + 'w') : '—') + '</td>';
+        html += '<td style="text-align:center;">' + escapeHtml(item.lastFacebook || 'Never') + '</td>';
+        html += '<td style="text-align:center;">' + statusHtml + '</td>';
+        html += '</tr>';
+      }
+      html += '</tbody></table>';
+      html += '</details></section>';
+
+      if (londonProperties.length > 0) {
+        var londonNeedsUpdateCount = data.londonNeedsUpdateCount || 0;
+        if (!londonNeedsUpdateCount) {
+          for (var lpCount = 0; lpCount < londonProperties.length; lpCount++) {
+            if (londonProperties[lpCount] && londonProperties[lpCount].londonNeedsUpdate) londonNeedsUpdateCount++;
+          }
+        }
+
+        html += '<section class="report-section">';
+        html += '<details class="cp-accordion">';
+        html += '<summary class="cp-accordion-summary"><span class="cp-section-title" style="color:#bfdbfe;">🏙️ Finest Rightmove London (' + londonProperties.length + ')' + (londonNeedsUpdateCount ? ' <span style="font-size:0.82rem; color:#fde68a;">· ' + londonNeedsUpdateCount + ' need update</span>' : '') + '</span><span class="cp-accordion-arrow">▼</span></summary>';
+        html += '<p class="report-subtitle" style="margin-bottom:0.8rem;">Properties currently marked as live on the Finest Rightmove London profile. Items needing profile updates are shown first.</p>';
+        html += '<table class="data-table"><thead><tr><th>Property</th><th>Agent</th><th style="text-align:center;">Status</th><th style="text-align:center;">Price</th><th style="text-align:center;">Added</th></tr></thead><tbody>';
+        for (var lp = 0; lp < londonProperties.length; lp++) {
+          var london = londonProperties[lp] || {};
+          html += '<tr style="background:' + (london.londonNeedsUpdate ? 'rgba(251,191,36,0.07)' : 'rgba(59,130,246,0.035)') + ';">';
+          html += '<td>' + (london.propertyUrl ? '<a href="' + escapeHtml(london.propertyUrl) + '" target="_blank">' + escapeHtml(london.propertyName || london.propertyId || '') + '</a>' : escapeHtml(london.propertyName || london.propertyId || '')) + ' <span class="property-url">' + escapeHtml(london.propertyId || '') + '</span>';
+          if (london.londonNeedsUpdate) html += ' <span class="cp-badge" style="background:rgba(251,191,36,0.16); color:#fde68a; border:1px solid rgba(251,191,36,0.28);">Needs update</span>';
+          html += '</td>';
+          html += '<td style="color:' + getShareAgentColor(london.agent) + '; font-weight:600;">' + escapeHtml(london.agent || 'Unassigned') + '</td>';
+          html += '<td style="text-align:center;">' + escapeHtml(london.status || '—') + '</td>';
+          html += '<td style="text-align:center;">' + escapeHtml(london.priceDisplay || '—') + '</td>';
+          html += '<td style="text-align:center;">' + escapeHtml(london.londonAddedDate || '—') + '</td>';
+          html += '</tr>';
+        }
+        html += '</tbody></table>';
+        html += '</details></section>';
+      }
+
+      html += '<section class="report-section">';
+      html += '<details class="cp-accordion">';
+      html += '<summary class="cp-accordion-summary"><span class="cp-section-title" style="color:#fbbf24;">🏷️ Flagged Properties (' + flaggedCount + ')</span><span class="cp-accordion-arrow">▼</span></summary>';
+      var groupOrder = [
+        { key: 'Active Interest', icon: '🔥', color: '#fbbf24' },
+        { key: 'Private', icon: '🔒', color: '#a5b4fc' },
+        { key: 'On Hold', icon: '⏸️', color: '#f97316' },
+        { key: 'No PR', icon: '🚫', color: '#f87171' },
+        { key: 'No Social', icon: '🚫', color: '#c084fc' }
+      ];
+      for (var g = 0; g < groupOrder.length; g++) {
+        var group = groupOrder[g];
+        var rows = flaggedGroups[group.key] || [];
+        if (!rows.length) continue;
+        html += '<details class="cp-group-accordion" style="margin-bottom:0.8rem;"><summary class="cp-group-title" style="background:' + group.color + '11; border-color:' + group.color + '33; color:' + group.color + ';">' + group.icon + ' ' + escapeHtml(group.key) + ' (' + rows.length + ')<span class="cp-group-arrow">▼</span></summary>';
+        html += '<table class="data-table"><thead><tr><th>Property</th><th style="text-align:center;">Price</th><th>Agent</th><th style="text-align:center;">Status</th></tr></thead><tbody>';
+        for (var r = 0; r < rows.length; r++) {
+          var row = rows[r];
+          var urgencyColor = row.urgency === 'Never featured' ? '#ef4444' : String(row.urgency || '').indexOf('Overdue') === 0 ? '#f97316' : row.urgency === 'Covered' ? '#22c55e' : '#eab308';
+          html += '<tr>';
+          html += '<td>' + (row.propertyUrl ? '<a href="' + escapeHtml(row.propertyUrl) + '" target="_blank">' + escapeHtml(row.propertyName) + '</a>' : escapeHtml(row.propertyName)) + ' <span class="property-url">' + escapeHtml(row.propertyId || '') + '</span></td>';
+          html += '<td style="text-align:center;">' + escapeHtml(row.guidePrice || '—') + '</td>';
+          html += '<td>' + escapeHtml(row.agent || '') + '</td>';
+          html += '<td style="text-align:center;"><span class="cp-badge" style="background:' + urgencyColor + '22;color:' + urgencyColor + ';">' + escapeHtml(row.urgency || '—') + '</span></td>';
+          html += '</tr>';
+          if (row.note) html += '<tr class="cp-note-row"><td colspan="4">📝 ' + escapeHtml(row.note) + '</td></tr>';
+        }
+        html += '</tbody></table></details>';
+      }
+      html += '</details></section>';
+
+      document.getElementById('content').innerHTML = html;
+    }
+
+    function renderContentPlanningCalendar(days) {
+      if (!days || !days.length) {
+        return '<div class="pr-empty"><div class="pr-empty-icon">📅</div><p>No scheduled posts in this snapshot.</p></div>';
+      }
+
+      var slots = ['07:30', '11:00', '17:00', '20:00'];
+      var html = '<div class="cp-calendar">';
+      for (var i = 0; i < days.length; i++) {
+        var day = days[i] || {};
+        var posts = day.posts || [];
+        var groupedPosts = groupCpCalendarPosts(posts);
+        var fbBySlot = {};
+        var otherPosts = [];
+        for (var s = 0; s < slots.length; s++) fbBySlot[slots[s]] = [];
+
+        for (var p = 0; p < groupedPosts.length; p++) {
+          var post = groupedPosts[p] || {};
+          var platform = String(post.platform || '').toLowerCase();
+          var time = normalizeCpPostTime(post.postTime);
+          if (platform.indexOf('facebook') !== -1 && fbBySlot[time]) {
+            fbBySlot[time].push(post);
+          } else {
+            otherPosts.push(post);
+          }
+        }
+
+        html += '<article class="cp-day-card">';
+        html += '<div class="cp-day-head"><div><div class="cp-day-title">' + escapeHtml(getCpDayLabel(day.date)) + '</div><div class="cp-day-date">' + escapeHtml(day.date || '') + '</div></div>';
+        html += '<div class="cp-day-date">' + groupedPosts.length + ' post' + (groupedPosts.length === 1 ? '' : 's') + '</div></div>';
+
+        for (var fs = 0; fs < slots.length; fs++) {
+          var slot = slots[fs];
+          html += '<div class="cp-slot">';
+          html += '<div class="cp-slot-label">Facebook ' + slot + '</div>';
+          if (fbBySlot[slot].length) {
+            for (var fp = 0; fp < fbBySlot[slot].length; fp++) {
+              html += renderCpPostCard(fbBySlot[slot][fp], slot);
+            }
+          } else {
+            html += '<div class="cp-empty-slot">No Facebook post</div>';
+          }
+          html += '</div>';
+        }
+
+        if (otherPosts.length) {
+          html += '<div class="cp-slot">';
+          html += '<div class="cp-slot-label" style="color:var(--f-grey-medium);">Other platforms / date-only</div>';
+          for (var op = 0; op < otherPosts.length; op++) {
+            html += renderCpPostCard(otherPosts[op], normalizeCpPostTime(otherPosts[op].postTime));
+          }
+          html += '</div>';
+        }
+
+        html += '</article>';
+      }
+      html += '</div>';
+      return html;
+    }
+
+    function groupCpCalendarPosts(posts) {
+      posts = posts || [];
+      var groups = {};
+      var output = [];
+      for (var i = 0; i < posts.length; i++) {
+        var post = posts[i] || {};
+        var groupId = String(post.postGroupId || '').trim();
+        if (!groupId) {
+          var single = Object.assign({}, post);
+          single.groupCount = 1;
+          single.groupedProperties = [{
+            propertyId: post.propertyId,
+            propertyName: post.propertyName,
+            agent: post.agent
+          }];
+          output.push(single);
+          continue;
+        }
+        if (!groups[groupId]) {
+          var grouped = Object.assign({}, post);
+          grouped.groupCount = 0;
+          grouped.groupedProperties = [];
+          grouped.groupRowNumbers = [];
+          grouped.locked = !!post.locked;
+          groups[groupId] = grouped;
+          output.push(grouped);
+        }
+        var target = groups[groupId];
+        if (post.locked) target.locked = true;
+        if (post.rowNumber) target.groupRowNumbers.push(post.rowNumber);
+        target.groupedProperties.push({
+          propertyId: post.propertyId,
+          propertyName: post.propertyName,
+          agent: post.agent
+        });
+        target.groupCount = target.groupedProperties.length;
+      }
+      return output;
+    }
+
+    function renderCpPostCard(post, fallbackTime) {
+      var platform = post.platform || '';
+      var platformClass = getCpPlatformClass(platform);
+      var time = normalizeCpPostTime(post.postTime) || fallbackTime || '';
+      var statusHtml = post.needsAttention
+        ? '<div class="cp-attention">' + escapeHtml(post.propertyStatus || 'Needs attention') + '</div>'
+        : '';
+      var themeText = post.theme ? ' · ' + post.theme : '';
+      var title = post.propertyName || post.propertyId || 'Scheduled post';
+      var html = '<div class="cp-post-card ' + platformClass + '">';
+      if (post.groupCount && post.groupCount > 1) {
+        html += '<div class="cp-post-title">Multi-property post <span class="cp-badge" style="background:rgba(168,85,247,0.28); color:#e9d5ff;">×' + post.groupCount + '</span></div>';
+        var grouped = post.groupedProperties || [];
+        for (var gp = 0; gp < grouped.length; gp++) {
+          html += '<div class="cp-post-title" style="font-size:0.82rem;">' + escapeHtml(grouped[gp].propertyName || grouped[gp].propertyId || '') + ' <span class="property-url">' + escapeHtml(grouped[gp].propertyId || '') + '</span></div>';
+        }
+      } else {
+        html += '<div class="cp-post-title">' + escapeHtml(title) + ' <span class="property-url">' + escapeHtml(post.propertyId || '') + '</span></div>';
+      }
+      html += '<div class="cp-post-meta">' + escapeHtml(post.agent || '') + (time ? ' · ' + escapeHtml(time) : '') + escapeHtml(themeText) + '</div>';
+      html += '<span class="cp-platform ' + platformClass + '">' + escapeHtml(getCpPlatformLabel(platform)) + '</span>';
+      html += renderCpReasonBadge(post.contentReason);
+      html += statusHtml;
+      html += '</div>';
+      return html;
+    }
+
+    function normalizeCpPostTime(time) {
+      var raw = String(time || '').trim();
+      var match = raw.match(/(\d{1,2})[:.](\d{2})/);
+      if (!match) return '';
+      var hour = String(match[1]).padStart(2, '0');
+      return hour + ':' + match[2];
+    }
+
+    function getCpPlatformClass(platform) {
+      var p = String(platform || '').toLowerCase();
+      if (p.indexOf('facebook') !== -1) return 'facebook';
+      if (p.indexOf('instagram') !== -1) return 'instagram';
+      if (p.indexOf('linkedin') !== -1) return 'linkedin';
+      if (p.indexOf('tiktok') !== -1 || p.indexOf('tik tok') !== -1) return 'tiktok';
+      if (p.indexOf('newsletter') !== -1) return 'newsletter';
+      return '';
+    }
+
+    function getCpPlatformLabel(platform) {
+      var p = String(platform || '').toLowerCase();
+      if (p.indexOf('facebook') !== -1) return 'Facebook';
+      if (p.indexOf('instagram') !== -1) return 'Instagram';
+      if (p.indexOf('linkedin') !== -1) return 'LinkedIn';
+      if (p.indexOf('tiktok') !== -1 || p.indexOf('tik tok') !== -1) return 'TikTok';
+      if (p.indexOf('newsletter') !== -1) return 'Newsletter';
+      return platform || 'Activity';
+    }
+
+    function getCpReasonLabel(reason) {
+      var raw = String(reason || '').trim();
+      var norm = raw.toLowerCase();
+      if (!raw || norm === 'regular' || norm === 'general') return '';
+      if (norm === 'price change' || norm === 'new price' || norm === 'price reduction') return 'New price';
+      if (norm === 'new listing' || norm === 'new launch') return 'New listing';
+      if (norm === 'partner priority') return 'Priority';
+      if (norm === 'needs a push') return 'Push';
+      if (norm === 'relaunch' || norm === 're-launch') return 'Relaunch';
+      return raw;
+    }
+
+    function renderCpReasonBadge(reason) {
+      var label = getCpReasonLabel(reason);
+      if (!label) return '';
+      var norm = String(reason || '').trim().toLowerCase();
+      var cls = (norm === 'price change' || norm === 'new price' || norm === 'price reduction') ? ' price' : '';
+      return '<span class="cp-reason' + cls + '">' + escapeHtml(label) + '</span>';
+    }
+
+    function getCpDayLabel(dateStr) {
+      var parts = String(dateStr || '').split('/');
+      if (parts.length !== 3) return 'Scheduled';
+      var d = new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]));
+      if (isNaN(d.getTime())) return 'Scheduled';
+      var days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      return days[d.getDay()];
+    }
+
+    // Colours sent with the report (the main app's single-source AGENT_COLORS_
+    // plus any AgentStatus sheet overrides). Populated when a report renders;
+    // the local map below is only a fallback for older share links without it.
+    var shareAgentColors = null;
+
+    function getShareAgentColor(agent) {
+      var key = String(agent || '').trim().toLowerCase();
+      if (shareAgentColors && shareAgentColors[key]) return shareAgentColors[key];
+      var known = {
+        'country & equestrian': '#d9ff57',
+        'country and equestrian': '#d9ff57',
+        'currans': '#a3ff5f',
+        'finest': '#ff5c70',
+        'finest head office': '#ff5c70',
+        'finest cheshire': '#ff9f43',
+        'finest cumbria north': '#ffcf48',
+        'finest cumbria south': '#ff6f91',
+        'garrison estates': '#65f58d',
+        'house & heritage': '#ff4fb8',
+        'house and heritage': '#ff4fb8',
+        'morgan aps': '#6ef7ad',
+        'rohrs & rowe': '#5ef4e2',
+        'rohrs and rowe': '#5ef4e2',
+        'sowerbys': '#60a5fa',
+        'the coastal house': '#c061ff',
+        'lune valley': '#a78bfa',
+        'maison': '#f472b6',
+        'fitzjohn estates': '#38bdf8'
+      };
+      if (known[key]) return known[key];
+      var hash = 0;
+      for (var i = 0; i < key.length; i++) {
+        hash = ((hash << 5) - hash) + key.charCodeAt(i);
+        hash |= 0;
+      }
+      var hue = Math.abs(hash) % 360;
+      return 'hsl(' + hue + ', 82%, 70%)';
+    }
+
+    function displayPropertyReport(report, meta) {
+      var data = report.snapshot || {};
+      currentPropertyData = data;
+      currentPRData = data.prData || { propertyId: null, features: [], submissions: [], newsletterFeatures: [], socialFeatures: [] };
+
+      document.getElementById('reportTitle').textContent = report.propertyName || data.properName || 'Property Report';
+      document.getElementById('reportSubtitle').textContent = formatDisplayDate(report.startDate) + ' - ' + formatDisplayDate(report.endDate);
+
+      var html = '';
+      html += '<section class="dashboard">';
+      html += '<div class="dashboard-header">';
+      if (report.propertyImage) {
+        html += '<div class="property-image-wrapper"><img class="property-image" src="' + escapeHtml(report.propertyImage) + '" alt="' + escapeHtml(report.propertyName || '') + '"></div>';
+      }
+      html += '<div class="property-info">';
+      html += '<h2 class="property-title">' + escapeHtml(report.propertyName || data.properName || '') + '</h2>';
+      html += '<p class="property-path"><a href="' + escapeHtml(report.propertyUrl || '#') + '" target="_blank">' + escapeHtml((report.propertyUrl || '').replace(/^https?:\/\//, '')) + '</a></p>';
+      html += '</div>';
+      html += '<div class="date-range-display">' + formatDisplayDate(report.startDate) + ' - ' + formatDisplayDate(report.endDate) + '</div>';
+      html += '</div>';
+
+      if (data.duplicatePropertyIds && data.duplicatePropertyIds.length > 0) {
+        var top = data.duplicatePropertyIds.slice(0, 8).map(function(d) {
+          var statusText = (d.statuses && d.statuses.length > 0) ? (' (' + d.statuses.join(', ') + ')') : '';
+          return escapeHtml(d.id) + ' ×' + d.count + statusText;
+        }).join(' • ');
+        var extra = data.duplicatePropertyIds.length > 8 ? (' + ' + (data.duplicatePropertyIds.length - 8) + ' more') : '';
+        html += '<div class="alert-strip"><strong>⚠ Duplicate Property IDs in PropertyRegister</strong><div style="margin-top:0.15rem; color:#fca5a5;">' + top + extra + '</div></div>';
+      }
+
+      if (data.ranking && data.ranking.rank) {
+        var icon = '📊';
+        if (data.ranking.percentile >= 90) icon = '🏆';
+        else if (data.ranking.percentile >= 75) icon = '🥈';
+        else if (data.ranking.percentile >= 50) icon = '🥉';
+        html += '<div class="ranking-card">';
+        html += '<div class="ranking-icon">' + icon + '</div>';
+        html += '<div class="ranking-details">';
+        html += '<div class="ranking-title">Performance Ranking for Selected Period</div>';
+        html += '<div class="ranking-value">Ranked #' + data.ranking.rank + ' of ' + data.ranking.total + ' properties</div>';
+        html += '<div class="ranking-subtitle">' + (data.ranking.views || 0).toLocaleString() + ' page views in this period</div>';
+        html += '</div>';
+        html += '<div class="ranking-badge">' + escapeHtml(data.ranking.percentileLabel || '') + '</div>';
+        html += '</div>';
+      }
+
+      html += '<div class="metrics-grid" id="metricsGrid"></div>';
+      html += '<div class="chart-section"><h3 class="chart-title">Daily Traffic Trend</h3><div class="chart-container"><canvas id="trendChart"></canvas></div></div>';
+      html += '<div class="spike-section" id="spikeSection"></div>';
+      html += '<div class="two-column">';
+      html += '<div class="chart-section"><h3 class="chart-title">Traffic by Channel</h3><div class="chart-container"><canvas id="channelChart"></canvas></div></div>';
+      html += '<div class="chart-section"><h3 class="chart-title">Top Sources</h3><table class="data-table" id="sourceTable"><thead><tr><th>Source / Medium</th><th style="text-align:right">Sessions</th><th style="text-align:right">Users</th></tr></thead><tbody></tbody></table></div>';
+      html += '</div>';
+      html += '<div class="pr-section"><div class="pr-header"><div class="pr-title"><span class="pr-title-icon">📣</span>Marketing Activity</div><div class="pr-sync-info" id="prSyncInfo"></div></div><div id="prContent"></div></div>';
+      html += '</section>';
+
+      document.getElementById('content').innerHTML = html;
+      displayMetrics(data);
+      displayTrendChart(data);
+      displaySpikes(data);
+      displayChannelChart(data);
+      displaySourceTable(data);
+      displayPRData(currentPRData, report.startDate, report.endDate);
+    }
+
+    function displayPropertyStoryReport(report, meta) {
+      var story = report.snapshot || {};
+      var header = story.header || {};
+      var current = story.current || {};
+      var analytics = story.analytics || {};
+      var metrics = analytics.metrics || {};
+      var enquiries = analytics.enquiries || {};
+      var upcoming = story.upcoming || [];
+      var marketingCoverage = story.marketingCoverage || {};
+      var createdText = meta && meta.createdAt ? formatDisplayDateTime(meta.createdAt) : '';
+      var expiresText = meta && meta.expiresAt ? formatDisplayDateTime(meta.expiresAt) : '';
+
+      document.getElementById('reportTitle').textContent = report.propertyName || header.propertyName || 'Property Story';
+      document.getElementById('reportSubtitle').textContent = 'Snapshot created ' + createdText + ' · expires ' + expiresText;
+
+      var html = '<section class="dashboard">';
+      html += '<div class="dashboard-header">';
+      if (report.propertyImage) html += '<div class="property-image-wrapper"><img class="property-image" src="' + escapeHtml(report.propertyImage) + '" alt="' + escapeHtml(report.propertyName || '') + '"></div>';
+      html += '<div class="property-info"><h2 class="property-title">' + escapeHtml(header.propertyName || report.propertyName || '') + '</h2>';
+      html += '<p style="color:var(--f-grey-light); margin:0.25rem 0;">' + escapeHtml(header.propertyId || '') + ' · ' + escapeHtml(header.agent || '') + '</p>';
+      if (report.propertyUrl) html += '<p class="property-path"><a href="' + escapeHtml(report.propertyUrl) + '" target="_blank" rel="noopener">View property listing</a></p>';
+      html += '</div><div class="date-range-display">' + escapeHtml((story.dateRange || {}).startDate || '') + ' - ' + escapeHtml((story.dateRange || {}).endDate || '') + '</div></div>';
+
+      html += '<section class="property-story-band"><h3 class="property-story-band-title">Current position</h3><div class="property-story-current">';
+      var nextActivity = upcoming.length ? ((upcoming[0].date || '') + ' · ' + (upcoming[0].who || upcoming[0].feature || 'Scheduled')) : 'Nothing scheduled';
+      var currentItems = [
+        ['Status', current.status || header.status || '-'],
+        [current.priceQualifier || 'Price', current.priceAmount || current.guidePrice || header.guidePrice || '-'],
+        ['Listed', current.listingDate || header.listingDate || '-'],
+        ['PR', current.prStatus || '-'],
+        ['Next activity', nextActivity],
+        ['Marketing coverage', marketingCoverage.status ? (marketingCoverage.status + (marketingCoverage.lastDate ? ' · ' + marketingCoverage.lastDate : '')) : '-']
+      ];
+      for (var ci = 0; ci < currentItems.length; ci++) {
+        html += '<div><div class="property-story-current-label">' + escapeHtml(currentItems[ci][0]) + '</div><div class="property-story-current-value">' + escapeHtml(currentItems[ci][1]) + '</div></div>';
+      }
+      html += '</div>';
+      if (marketingCoverage.status === 'Due soon') {
+        html += '<div class="property-story-coverage-notice"><strong>Marketing coverage due soon</strong>' +
+          'Due soon means 30–59 days since the latest completed social or newsletter coverage. ' +
+          (marketingCoverage.lastDate ? 'Last coverage was ' + escapeHtml(marketingCoverage.lastDate) + ' (' + escapeHtml(marketingCoverage.daysSince) + ' days ago). ' : '') +
+          (marketingCoverage.daysUntilOverdue !== null && marketingCoverage.daysUntilOverdue !== undefined ? 'It becomes overdue in ' + escapeHtml(marketingCoverage.daysUntilOverdue) + ' days.' : '') + '</div>';
+      } else if (marketingCoverage.status === 'Overdue') {
+        html += '<div class="property-story-coverage-notice overdue"><strong>Marketing coverage overdue</strong>' +
+          'Overdue means 60 or more days since the latest completed social or newsletter coverage. ' +
+          (marketingCoverage.lastDate ? 'Last coverage was ' + escapeHtml(marketingCoverage.lastDate) + ' (' + escapeHtml(marketingCoverage.daysSince) + ' days ago).' : '') + '</div>';
+      }
+      html += '</section>';
+
+      html += '<section class="property-story-band"><h3 class="property-story-band-title">Performance</h3><div class="property-story-primary-metrics">';
+      var storyMetrics = [
+        ['Page Views', metrics.pageViews || 0],
+        ['Users', metrics.users || 0],
+        ['Brochure Downloads', enquiries.brochureDownloads || enquiries.fileDownloads || 0],
+        ['Enquiries', enquiries.formSubmits || 0]
+      ];
+      for (var mi = 0; mi < storyMetrics.length; mi++) {
+        html += '<div class="property-story-metric"><div class="property-story-metric-value">' + compactNumber(storyMetrics[mi][1] || 0) + '</div><div class="property-story-metric-label">' + storyMetrics[mi][0] + '</div></div>';
+      }
+      html += '</div>';
+
+      if (analytics.dailyTrend && analytics.dailyTrend.length) {
+        html += '<div style="margin-top:1rem;"><div class="property-story-chart"><canvas id="trendChart"></canvas></div></div>';
+      }
+      html += '</section>';
+
+      html += '<section class="property-story-band"><h3 class="property-story-band-title">Upcoming activity <span class="property-story-activity-count">' + upcoming.length + '</span></h3>';
+      if (!upcoming.length) {
+        html += '<div class="pr-empty" style="padding:1rem 0;"><p>No future marketing activity is currently scheduled.</p></div>';
+      } else {
+        for (var ui = 0; ui < upcoming.length; ui++) {
+          html += '<div class="property-story-row"><div class="property-story-row-date">' + escapeHtml(upcoming[ui].date || '') + '</div><div><div class="property-story-row-title">' + escapeHtml(upcoming[ui].who || upcoming[ui].feature || '') + '</div><div class="property-story-row-detail">' + escapeHtml(upcoming[ui].contentReason || upcoming[ui].theme || '') + '</div></div><div class="property-story-row-type">Planned</div></div>';
+        }
+      }
+      html += '</section>';
+
+      var socials = story.otherFeatures || [];
+      var submissions = story.submissions || [];
+      var features = story.features || [];
+      html += '<section class="property-story-band" style="border-bottom:none;"><h3 class="property-story-band-title">Marketing activity</h3>';
+      html += '<details class="property-story-activity-group" open><summary><span>Social and other marketing <span class="property-story-activity-count">' + socials.length + '</span></span></summary>';
+      if (!socials.length) html += '<div class="pr-empty" style="padding:0.9rem 0;"><p>No social or newsletter activity in this report period.</p></div>';
+      for (var si = 0; si < socials.length; si++) {
+        var social = socials[si];
+        var socialWho = String(social.who || '').toLowerCase();
+        var socialIsInstagram = socialWho.indexOf('instagram') !== -1;
+        var socialIsFacebook = socialWho.indexOf('facebook') !== -1;
+        html += '<div class="property-story-row"><div class="property-story-row-date">' + escapeHtml(social.date || '') + '</div><div><div class="property-story-row-title">' + escapeHtml(social.who || social.feature || 'Marketing activity') + '</div>';
+        if (social.theme) html += '<details class="property-story-caption"><summary>View caption or theme</summary><div class="property-story-row-detail">' + escapeHtml(social.theme) + '</div></details>';
+        if (social.link) html += '<div class="pr-item-link"><a href="' + escapeHtml(social.link) + '" target="_blank" rel="noopener">' + ((social.feature || '').toLowerCase() === 'newsletter' ? 'View newsletter' : 'View post') + ' →</a></div>';
+        if (social.stats && (socialIsFacebook || socialIsInstagram)) {
+          var socialStats = social.stats;
+          var publicStats = socialIsInstagram ? [
+            ['Views', socialStats.views], ['Reach', socialStats.reach], ['Likes', socialStats.likes], ['Comments', socialStats.comments], ['Shares', socialStats.shares], ['Saves', socialStats.saves]
+          ] : [
+            ['Views', socialStats.views], ['Reach', socialStats.reach], ['Reactions', socialStats.reactions], ['Comments', socialStats.comments], ['Shares', socialStats.shares], ['Link clicks', socialStats.linkClicks]
+          ];
+          html += '<div class="sm-stats-bar">';
+          for (var psi = 0; psi < publicStats.length; psi++) html += '<div><div class="sm-stat-val">' + compactNumber(publicStats[psi][1] || 0) + '</div><div class="sm-stat-lbl">' + publicStats[psi][0] + '</div></div>';
+          html += '</div>';
+        }
+        html += '</div><div class="property-story-row-type">Social media</div></div>';
+      }
+      html += '</details>';
+
+      html += '<details class="property-story-activity-group"><summary><span>PR submissions <span class="property-story-activity-count">' + submissions.length + '</span></span></summary>';
+      if (!submissions.length) html += '<div class="pr-empty" style="padding:0.9rem 0;"><p>No PR submissions in this report period.</p></div>';
+      for (var subi = 0; subi < submissions.length; subi++) {
+        html += '<div class="property-story-row"><div class="property-story-row-date">' + escapeHtml(submissions[subi].date || '') + '</div><div><div class="property-story-row-title">' + escapeHtml(submissions[subi].publication || 'PR submission') + '</div>';
+        if (submissions[subi].theme) html += '<div class="property-story-row-detail">' + escapeHtml(submissions[subi].theme) + '</div>';
+        html += '</div><div class="property-story-row-type">PR submission</div></div>';
+      }
+      html += '</details>';
+
+      html += '<details class="property-story-activity-group"><summary><span>PR features <span class="property-story-activity-count">' + features.length + '</span></span></summary>';
+      if (!features.length) html += '<div class="pr-empty" style="padding:0.9rem 0;"><p>No PR features in this report period.</p></div>';
+      for (var fi = 0; fi < features.length; fi++) {
+        html += '<div class="property-story-row"><div class="property-story-row-date">' + escapeHtml(features[fi].date || '') + '</div><div><div class="property-story-row-title">' + escapeHtml(features[fi].publication || 'PR feature') + '</div>';
+        if (features[fi].theme) html += '<div class="property-story-row-detail">' + escapeHtml(features[fi].theme) + '</div>';
+        if (features[fi].link) html += '<div class="pr-item-link"><a href="' + escapeHtml(features[fi].link) + '" target="_blank" rel="noopener">View article →</a></div>';
+        html += '</div><div class="property-story-row-type">PR feature</div></div>';
+      }
+      html += '</details></section></section>';
+
+      document.getElementById('content').innerHTML = html;
+      if (analytics.dailyTrend && analytics.dailyTrend.length) {
+        var storyChartData = Object.assign({}, analytics, { spikes: [] });
+        displayTrendChart(storyChartData);
+      }
+    }
+
+    function propertyStoryDateValue_(value) {
+      var raw = String(value || '').trim();
+      var uk = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+      if (uk) return new Date(Number(uk[3]), Number(uk[2]) - 1, Number(uk[1])).getTime();
+      var parsed = new Date(raw);
+      return isNaN(parsed.getTime()) ? 0 : parsed.getTime();
+    }
+
+    function displayMetrics(data) {
+      var grid = document.getElementById('metricsGrid');
+      var m = data.metrics || {};
+      var e = data.enquiries || {};
+      var engagementRate = (((m.engagementRate || 0) * 100)).toFixed(1);
+      var avgDuration = formatDuration(m.avgSessionDuration || 0);
+      var formDatesDisplay = '';
+      if (e.formSubmitDates && e.formSubmitDates.length > 0) {
+        var uniqueDates = [];
+        for (var i = 0; i < e.formSubmitDates.length; i++) {
+          if (uniqueDates.indexOf(e.formSubmitDates[i]) === -1) uniqueDates.push(e.formSubmitDates[i]);
+        }
+        formDatesDisplay = uniqueDates.map(formatDisplayDate).join(', ');
+      }
+
+      var metrics = [
+        { label: 'Page Views', value: (m.pageViews || 0).toLocaleString(), highlight: true, subtitle: null },
+        { label: 'Engagement Rate', value: engagementRate + '%', highlight: false, subtitle: null },
+        { label: 'Avg. Duration', value: avgDuration, highlight: false, subtitle: null },
+        { label: 'Brochure Downloads', value: ((e.brochureDownloads || e.fileDownloads || 0)).toLocaleString(), highlight: false, subtitle: null },
+        { label: 'Form Submissions', value: (e.formSubmits || 0).toLocaleString(), highlight: true, subtitle: formDatesDisplay }
+      ];
+
+      var html = '';
+      for (var k = 0; k < metrics.length; k++) {
+        html += '<div class="metric-card' + (metrics[k].highlight ? ' highlight' : '') + '">';
+        html += '<div class="metric-label">' + metrics[k].label + '</div>';
+        html += '<div class="metric-value">' + metrics[k].value + '</div>';
+        if (metrics[k].subtitle) html += '<div class="metric-subtitle">' + escapeHtml(metrics[k].subtitle) + '</div>';
+        html += '</div>';
+      }
+      grid.innerHTML = html;
+    }
+
+    function displayTrendChart(data) {
+      var canvas = document.getElementById('trendChart');
+      if (!canvas) return;
+      var ctx = canvas.getContext('2d');
+      if (trendChartInstance) trendChartInstance.destroy();
+
+      var labels = [];
+      var views = [];
+      var spikeDates = {};
+      (data.spikes || []).forEach(function(spike) { spikeDates[spike.date] = true; });
+      (data.dailyTrend || []).forEach(function(item) {
+        labels.push(formatChartDate(item.date));
+        views.push(item.pageViews || 0);
+      });
+      var pointColors = (data.dailyTrend || []).map(function(item) { return spikeDates[item.date] ? '#e7755c' : 'transparent'; });
+      var pointRadius = (data.dailyTrend || []).map(function(item) { return spikeDates[item.date] ? 6 : 0; });
+
+      trendChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: views,
+            borderColor: '#e7755c',
+            backgroundColor: 'rgba(231, 117, 92, 0.14)',
+            fill: true,
+            tension: 0.3,
+            pointBackgroundColor: pointColors,
+            pointBorderColor: pointColors,
+            pointRadius: pointRadius,
+            pointHoverRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false }, ticks: { maxTicksLimit: 10, color: '#a0a0a0' } },
+            y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.08)' }, ticks: { color: '#a0a0a0' } }
+          }
+        }
+      });
+    }
+
+    function displaySpikes(data) {
+      var section = document.getElementById('spikeSection');
+      if (!section) return;
+      if (!data.spikes || data.spikes.length === 0) {
+        section.innerHTML = '<div class="no-spikes"><p>No significant traffic spikes detected in this period</p></div>';
+        return;
+      }
+
+      var html = '<div class="spike-header"><div class="spike-icon">!</div><h3 class="spike-title">Traffic Spikes Detected</h3></div><ul class="spike-list">';
+      for (var i = 0; i < data.spikes.length; i++) {
+        var spike = data.spikes[i];
+        var analysis = (data.spikeAnalysis || [])[i] || {};
+        var prMatch = findPRMatch(spike.date);
+        var socialMatch = findSocialMatch(spike.date);
+        html += '<li class="spike-item">';
+        html += '<div class="spike-date">' + formatDisplayDate(spike.date) + ' <span class="spike-badge">+' + spike.increasePercent + '%</span></div>';
+        html += '<div class="spike-details">' + spike.views + ' views (avg: ' + spike.rollingAvg + ')</div>';
+        html += '<div class="spike-narrative">' + escapeHtml(analysis.narrative || 'Analyzing...') + '</div>';
+        if (prMatch) {
+          html += '<div class="spike-pr-link"><span class="spike-pr-link-text">📰 Likely linked to PR: </span><span class="spike-pr-link-pub">' + escapeHtml(prMatch.publication) + '</span>' + formatDayDiff(prMatch.daysApart) + '</div>';
+        }
+        if (socialMatch) {
+          html += '<div class="spike-pr-link" style="background: rgba(59,130,246,0.2); border-left-color:#3b82f6;"><span class="spike-pr-link-text">📱 Likely linked to Social: </span><span class="spike-pr-link-pub">' + escapeHtml(socialMatch.platform) + '</span>' + formatDayDiff(socialMatch.daysApart) + '</div>';
+        }
+        html += '</li>';
+      }
+      html += '</ul>';
+      section.innerHTML = html;
+    }
+
+    function displayChannelChart(data) {
+      var canvas = document.getElementById('channelChart');
+      if (!canvas) return;
+      var ctx = canvas.getContext('2d');
+      if (channelChartInstance) channelChartInstance.destroy();
+      var channels = (data.channelData || []).slice(0, 8);
+      var colors = ['#e7755c', '#4ade80', '#60a5fa', '#f87171', '#fbbf24', '#a78bfa', '#fb7185', '#a0a0a0'];
+      channelChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: channels.map(function(c) { return c.channel; }),
+          datasets: [{ data: channels.map(function(c) { return c.sessions; }), backgroundColor: colors, borderWidth: 0 }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'right', labels: { boxWidth: 12, padding: 15, font: { size: 12 }, color: '#ffffff' } }
+          }
+        }
+      });
+    }
+
+    function displaySourceTable(data) {
+      var tbody = document.querySelector('#sourceTable tbody');
+      if (!tbody) return;
+      var rows = (data.sourceData || []).slice(0, 20);
+      var grouped = {};
+
+      rows.forEach(function(row) {
+        var sourceName = String(row.source || '').trim();
+        var mediumName = String(row.medium || '').trim();
+        var sourceLower = sourceName.toLowerCase();
+        var mediumLower = mediumName.toLowerCase();
+        var key;
+
+        if (
+          (sourceLower === 'twitter.com' && mediumLower === 'social') ||
+          (sourceLower.indexOf('facebook') !== -1 && mediumLower === 'referral') ||
+          sourceLower === 'fb' ||
+          sourceLower.indexOf('m.facebook') !== -1 ||
+          sourceLower.indexOf('l.facebook') !== -1 ||
+          sourceLower.indexOf('lm.facebook') !== -1
+        ) {
+          key = 'Facebook / social';
+        } else if (sourceLower === 'facebook.com' && mediumLower === 'social') {
+          key = 'Facebook / social';
+        } else if (sourceLower.indexOf('instagram') !== -1 || sourceLower === 'ig' || sourceLower.indexOf('l.instagram') !== -1) {
+          key = 'Instagram / ' + mediumName;
+        } else {
+          key = (sourceName || '(not set)') + ' / ' + (mediumName || '(not set)');
+        }
+
+        if (!grouped[key]) grouped[key] = { sessions: 0, users: 0 };
+        grouped[key].sessions += row.sessions || 0;
+        grouped[key].users += row.users || 0;
+      });
+
+      var groupedRows = Object.keys(grouped).map(function(name) {
+        return {
+          name: name,
+          sessions: grouped[name].sessions,
+          users: grouped[name].users
+        };
+      }).sort(function(a, b) {
+        return b.sessions - a.sessions;
+      }).slice(0, 10);
+
+      var html = '';
+      groupedRows.forEach(function(row) {
+        html += '<tr><td>' + escapeHtml(row.name) + '</td><td style="text-align:right">' + row.sessions.toLocaleString() + '</td><td style="text-align:right">' + row.users.toLocaleString() + '</td></tr>';
+      });
+      tbody.innerHTML = html;
+    }
+
+    function displayPRData(prData, startDate, endDate) {
+      var prContent = document.getElementById('prContent');
+      var prSyncInfo = document.getElementById('prSyncInfo');
+      currentPRData = prData || {};
+
+      if (prData.lastSyncTime) {
+        var syncDate = new Date(prData.lastSyncTime);
+        prSyncInfo.textContent = 'Last synced: ' + syncDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) + ' at ' + syncDate.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) + ' (updates every 4 hours)';
+      }
+
+      if (!prData.propertyId) {
+        prContent.innerHTML = '<div class="pr-not-found"><div class="pr-not-found-icon">📋</div><p>This property is not in the PR tracking system</p><p style="font-size:0.8rem; margin-top:0.5rem; opacity:0.7;">Only Finest properties with a URA ID are tracked</p></div>';
+        return;
+      }
+
+      var filteredFeatures = filterByDateRange(prData.features || [], startDate, endDate);
+      var filteredSubmissions = filterByDateRange(prData.submissions || [], startDate, endDate);
+      var filteredNewsletter = filterByDateRange(prData.newsletterFeatures || [], startDate, endDate);
+      var filteredSocial = filterByDateRange(prData.socialFeatures || [], startDate, endDate);
+
+      var html = '';
+      html += '<div class="pr-stats">';
+      html += '<div class="pr-stat"><div class="pr-stat-value">' + filteredFeatures.length + '</div><div class="pr-stat-label">PR Features</div></div>';
+      html += '<div class="pr-stat"><div class="pr-stat-value">' + filteredNewsletter.length + '</div><div class="pr-stat-label">Newsletter</div></div>';
+      html += '<div class="pr-stat"><div class="pr-stat-value">' + filteredSocial.length + '</div><div class="pr-stat-label">Social</div></div>';
+      html += '<div class="pr-stat"><div class="pr-stat-value">' + filteredSubmissions.length + '</div><div class="pr-stat-label">Submissions</div></div>';
+      html += '<div class="pr-stat pr-stat-id"><div class="pr-stat-value">' + escapeHtml(prData.propertyId) + '</div><div class="pr-stat-label">Property ID</div></div>';
+      html += '</div>';
+
+      html += '<div class="pr-tabs">';
+      html += '<button class="pr-tab active" onclick="switchPRTab(\'features\', this)">PR Features<span class="pr-tab-count">' + filteredFeatures.length + '</span></button>';
+      html += '<button class="pr-tab" onclick="switchPRTab(\'newsletter\', this)">Newsletter<span class="pr-tab-count">' + filteredNewsletter.length + '</span></button>';
+      html += '<button class="pr-tab" onclick="switchPRTab(\'social\', this)">Social<span class="pr-tab-count">' + filteredSocial.length + '</span></button>';
+      html += '<button class="pr-tab" onclick="switchPRTab(\'submissions\', this)">Submissions<span class="pr-tab-count">' + filteredSubmissions.length + '</span></button>';
+      html += '</div>';
+
+      html += '<div class="pr-content active" id="prFeatures">' + renderPRTimeline(filteredFeatures, '📰', 'No PR features in this date range', function(feat) {
+        var row = '<div class="pr-item"><div class="pr-item-header"><span class="pr-item-publication">' + escapeHtml(feat.publication) + '</span><span class="pr-item-date">' + escapeHtml(feat.date) + '</span></div>';
+        if (feat.theme) row += '<div class="pr-item-theme">' + escapeHtml(feat.theme) + '</div>';
+        if (feat.link && feat.link.trim() !== '') row += '<div class="pr-item-link"><a href="' + escapeHtml(feat.link) + '" target="_blank">View article →</a></div>';
+        return row + '</div>';
+      }) + '</div>';
+
+      html += '<div class="pr-content" id="prNewsletter">' + renderPRTimeline(filteredNewsletter, '📧', 'No newsletter features in this date range', function(item) {
+        var row = '<div class="pr-item" style="border-left-color:#60a5fa;"><div class="pr-item-header"><span class="pr-item-publication">Newsletter</span><span class="pr-item-date">' + escapeHtml(item.date) + '</span></div>';
+        if (item.theme) row += '<div class="pr-item-theme">' + escapeHtml(item.theme) + '</div>';
+        if (item.link && item.link.trim() !== '') row += '<div class="pr-item-link"><a href="' + escapeHtml(item.link) + '" target="_blank">View →</a></div>';
+        return row + '</div>';
+      }) + '</div>';
+
+      html += '<div class="pr-content" id="prSocial">' + renderPRTimeline(filteredSocial, '📱', 'No social media features in this date range', function(item) {
+        var row = '<div class="pr-item" style="border-left-color:#a855f7;"><div class="pr-item-header"><span class="pr-item-publication">' + escapeHtml(item.who || 'Social Media') + '</span><span class="pr-item-date">' + escapeHtml(item.date) + '</span></div>';
+        if (item.theme) row += '<div class="pr-item-theme">' + escapeHtml(item.theme) + '</div>';
+        if (item.link && item.link.trim() !== '') row += '<div class="pr-item-link"><a href="' + escapeHtml(item.link) + '" target="_blank">View post →</a></div>';
+        if (item.stats) {
+          var whoLower = String(item.who || '').toLowerCase();
+          var statItems = whoLower.indexOf('facebook') !== -1 ? [
+            { label: 'Views', val: item.stats.views },
+            { label: 'Reach', val: item.stats.reach },
+            { label: 'Reactions', val: item.stats.reactions },
+            { label: 'Comments', val: item.stats.comments },
+            { label: 'Shares', val: item.stats.shares },
+            { label: 'Link Clicks', val: item.stats.linkClicks }
+          ] : [
+            { label: 'Views', val: item.stats.views },
+            { label: 'Likes', val: item.stats.likes },
+            { label: 'Comments', val: item.stats.comments },
+            { label: 'Shares', val: item.stats.shares },
+            { label: 'Saves', val: item.stats.saves }
+          ];
+          row += '<div class="sm-stats-bar">';
+          for (var i = 0; i < statItems.length; i++) {
+            row += '<div><div class="sm-stat-val">' + compactNumber(statItems[i].val) + '</div><div class="sm-stat-lbl">' + statItems[i].label + '</div></div>';
+          }
+          row += '</div>';
+        }
+        return row + '</div>';
+      }) + '</div>';
+
+      html += '<div class="pr-content" id="prSubmissions">' + renderPRTimeline(filteredSubmissions, '📝', 'No submissions in this date range', function(item) {
+        var row = '<div class="pr-item" style="border-left-color: var(--f-grey-medium);"><div class="pr-item-header"><span class="pr-item-publication">' + escapeHtml(item.publication) + '</span><span class="pr-item-date">' + escapeHtml(item.date) + '</span></div>';
+        if (item.theme) row += '<div class="pr-item-theme">' + escapeHtml(item.theme) + '</div>';
+        return row + '</div>';
+      }) + '</div>';
+
+      prContent.innerHTML = html;
+    }
+
+    function renderPRTimeline(items, icon, emptyText, renderItem) {
+      if (!items || items.length === 0) {
+        return '<div class="pr-empty"><div class="pr-empty-icon">' + icon + '</div><p>' + emptyText + '</p></div>';
+      }
+      var html = '<div class="pr-timeline">';
+      items.forEach(function(item) { html += renderItem(item); });
+      html += '</div>';
+      return html;
+    }
+
+    function switchPRTab(tab, btnElement) {
+      document.querySelectorAll('.pr-tab').forEach(function(el) { el.classList.remove('active'); });
+      btnElement.classList.add('active');
+      ['prFeatures', 'prNewsletter', 'prSocial', 'prSubmissions'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.classList.remove('active');
+      });
+      if (tab === 'features') document.getElementById('prFeatures').classList.add('active');
+      else if (tab === 'newsletter') document.getElementById('prNewsletter').classList.add('active');
+      else if (tab === 'social') document.getElementById('prSocial').classList.add('active');
+      else document.getElementById('prSubmissions').classList.add('active');
+    }
+
+    function filterByDateRange(items, startDate, endDate) {
+      var start = new Date(startDate);
+      var end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      return (items || []).filter(function(item) {
+        var d = parsePRDate(item.date);
+        return d && d >= start && d <= end;
+      });
+    }
+
+    function findPRMatch(spikeDate) {
+      if (!currentPRData || !currentPRData.features) return null;
+      var spikeDateObj = new Date(spikeDate);
+      var closestMatch = null;
+      var closestDays = Infinity;
+      currentPRData.features.forEach(function(feature) {
+        var featureDate = parsePRDate(feature.date);
+        if (!featureDate) return;
+        var diffDays = Math.round((spikeDateObj.getTime() - featureDate.getTime()) / 86400000);
+        if (Math.abs(diffDays) <= 5 && Math.abs(diffDays) < Math.abs(closestDays)) {
+          closestDays = diffDays;
+          closestMatch = { publication: feature.publication, daysApart: diffDays };
+        }
+      });
+      return closestMatch;
+    }
+
+    function findSocialMatch(spikeDate) {
+      if (!currentPRData || !currentPRData.socialFeatures) return null;
+      var spikeDateObj = new Date(spikeDate);
+      var closestMatch = null;
+      var closestDays = Infinity;
+      currentPRData.socialFeatures.forEach(function(item) {
+        var socialDate = parsePRDate(item.date);
+        if (!socialDate) return;
+        var diffDays = Math.round((spikeDateObj.getTime() - socialDate.getTime()) / 86400000);
+        if (Math.abs(diffDays) <= 3 && Math.abs(diffDays) < Math.abs(closestDays)) {
+          closestDays = diffDays;
+          closestMatch = { platform: item.who || item.featureType || 'Social Media', daysApart: diffDays };
+        }
+      });
+      return closestMatch;
+    }
+
+    function formatDayDiff(daysApart) {
+      if (daysApart === 0) return ' <span style="color: var(--f-grey-medium);">(same day)</span>';
+      return ' <span style="color: var(--f-grey-medium);">(' + (daysApart > 0 ? daysApart + ' days after' : Math.abs(daysApart) + ' days before') + ')</span>';
+    }
+
+    function formatCompactMetric(value) {
+      var num = Number(value) || 0;
+      if (num >= 1000000) return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+      if (num >= 1000) return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+      return Math.round(num).toLocaleString('en-GB');
+    }
+
+    function parsePRDate(dateStr) {
+      if (!dateStr) return null;
+      var parts = String(dateStr).split('/');
+      if (parts.length !== 3) return null;
+      return new Date(parts[2], parts[1] - 1, parts[0]);
+    }
+
+    function displayMonthlyReport(data, meta) {
+      var monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      document.getElementById('reportTitle').textContent = (data.monthName || monthNames[(data.month || 1) - 1]) + ' ' + (data.year || 2026) + ' Report';
+      document.getElementById('reportSubtitle').textContent = 'Performance summary and PR coverage';
+
+      var html = '';
+      var totals = data.totals || {};
+      html += '<div class="stats-grid">';
+      if (totals.totalVisitors !== undefined) {
+        html += '<div class="stat-card"><div class="stat-value">' + formatCompactMetric(totals.totalVisitors || 0) + '</div><div class="stat-label">Total Visitors</div>';
+        if (totals.yoyChange !== undefined && totals.yoyChange !== null) {
+          var changeClass = totals.yoyChange >= 0 ? 'positive' : 'negative';
+          var changeSymbol = totals.yoyChange >= 0 ? '↑' : '↓';
+          html += '<div class="stat-change ' + changeClass + '">' + changeSymbol + ' ' + Math.abs(totals.yoyChange).toFixed(1) + '% vs same month last year</div>';
+        }
+        html += '</div>';
+      }
+      if (totals.pageViews !== undefined) html += '<div class="stat-card"><div class="stat-value">' + (totals.pageViews || 0).toLocaleString() + '</div><div class="stat-label">Page Views</div></div>';
+      html += '<div class="stat-card"><div class="stat-value">' + (totals.prFeatures || 0) + '</div><div class="stat-label">PR Features</div></div>';
+      if (totals.engagementRate !== undefined) html += '<div class="stat-card"><div class="stat-value green">' + (totals.engagementRate || 0).toFixed(1) + '%</div><div class="stat-label">Engagement Rate</div></div>';
+      html += '</div>';
+
+      var topProperties = data.topProperties || [];
+      if (topProperties.length > 0) {
+        html += '<div class="report-section"><h3 class="report-section-title">Top 20 Properties</h3><table class="top-properties-table" style="table-layout:fixed;width:100%;"><thead><tr><th style="width:40px;">#</th><th>Property</th><th style="width:160px;">Agent</th><th style="width:80px;text-align:right;">Views</th></tr></thead><tbody>';
+        for (var tp = 0; tp < Math.min(topProperties.length, 20); tp++) {
+          var prop = topProperties[tp];
+          html += '<tr><td>' + (tp + 1) + '</td><td><div style="font-weight:500;">' + escapeHtml(prop.title || prop.name || '') + '</div>';
+          if (prop.url) html += '<div class="property-url">' + escapeHtml(prop.url) + '</div>';
+          html += '</td><td style="color:' + escapeHtml(prop.agentColor || getShareAgentColor(prop.agent || '')) + '; font-weight:600;">' + escapeHtml(prop.agent || 'Unassigned') + '</td><td style="text-align:right; font-weight:600;">' + (prop.views || prop.screenPageViews || 0).toLocaleString() + '</td></tr>';
+        }
+        html += '</tbody></table></div>';
+      }
+
+      function renderMonthlyTable(title, items, cols) {
+        if (!items || items.length === 0) return '';
+        var html = '<div class="report-section"><h3 class="report-section-title">' + title + ' (' + items.length + ')</h3><table class="top-properties-table" style="table-layout:fixed;width:100%;"><thead><tr>';
+        cols.forEach(function(col) { html += '<th' + (col.style ? ' style="' + col.style + '"' : '') + '>' + col.label + '</th>'; });
+        html += '</tr></thead><tbody>';
+        items.forEach(function(item) {
+          html += '<tr>';
+          cols.forEach(function(col) {
+            var value = col.render ? col.render(item) : escapeHtml(item[col.key] || '');
+            html += '<td' + (col.tdStyle ? ' style="' + col.tdStyle + '"' : '') + '>' + value + '</td>';
+          });
+          html += '</tr>';
+        });
+        html += '</tbody></table></div>';
+        return html;
+      }
+
+      html += renderMonthlyTable('PR Features', data.prFeatures || [], [
+        { label: 'Date', key: 'date', style: 'width:100px;', tdStyle: 'white-space:nowrap;' },
+        { label: 'Property', render: function(i) { return escapeHtml(i.propertyName || i.property || ''); } },
+        { label: 'Publication', key: 'publication' },
+        { label: 'Link', style: 'width:80px;', render: function(i) { return i.link && i.link.trim() !== '' ? '<a href="' + escapeHtml(i.link) + '" target="_blank">View →</a>' : '<span style="color: var(--f-grey-medium);">-</span>'; } }
+      ]);
+
+      html += renderMonthlyTable('Newsletter Features', data.newsletterFeatures || [], [
+        { label: 'Date', key: 'date', style: 'width:100px;', tdStyle: 'white-space:nowrap;' },
+        { label: 'Property', render: function(i) { return escapeHtml(i.propertyName || i.property || ''); } },
+        { label: 'Theme', key: 'theme' },
+        { label: 'Link', style: 'width:80px;', render: function(i) { return i.link && i.link.trim() !== '' ? '<a href="' + escapeHtml(i.link) + '" target="_blank">View →</a>' : '<span style="color: var(--f-grey-medium);">-</span>'; } }
+      ]);
+
+      var socialFeatures = data.socialFeatures || [];
+      if (socialFeatures.length > 0) {
+        html += '<div class="report-section"><h3 class="report-section-title">Social Media Features (' + socialFeatures.length + ')</h3>';
+        var smGrouped = {};
+        socialFeatures.forEach(function(item) {
+          var platform = item.who || item.platform || 'Social Media';
+          if (!smGrouped[platform]) smGrouped[platform] = [];
+          smGrouped[platform].push(item);
+        });
+        var smIndex = 0;
+        for (var smWho in smGrouped) {
+          var cardId = 'sm-card-' + smIndex;
+          var whoLower = smWho.toLowerCase();
+          var isInstagram = whoLower.indexOf('instagram') !== -1;
+          var isFacebook = whoLower.indexOf('facebook') !== -1;
+          var isTikTok = whoLower.indexOf('tiktok') !== -1;
+          var isLinkedIn = whoLower.indexOf('linkedin') !== -1;
+          var cardColor = isInstagram ? 'linear-gradient(135deg, #833AB4, #E1306C, #F77737)' : isFacebook ? '#1877F2' : isTikTok ? '#000000' : isLinkedIn ? '#0A66C2' : '#a855f7';
+          var platViews = 0, platClicks = 0, platInteractions = 0, platMatched = 0;
+          var platSeenStats = {};
+          smGrouped[smWho].forEach(function(pItem) {
+            if (!pItem.stats) return;
+            var pStatsKey = pItem.stats.postKey || (pItem.link || '') || (smWho + '|' + pItem.date + '|' + pItem.propertyName);
+            if (platSeenStats[pStatsKey]) return;
+            platSeenStats[pStatsKey] = true;
+            platMatched++;
+            platViews += pItem.stats.views || 0;
+            platClicks += pItem.stats.linkClicks || 0;
+            if (isFacebook) platInteractions += (pItem.stats.reactions || 0) + (pItem.stats.comments || 0) + (pItem.stats.shares || 0);
+            else platInteractions += (pItem.stats.likes || 0) + (pItem.stats.comments || 0) + (pItem.stats.shares || 0) + (pItem.stats.saves || 0);
+          });
+          var fbAll = ((data.socialSummary || {}).facebookAll) || {};
+          html += '<div style="margin-bottom:1rem;">';
+          html += '<div onclick="toggleSocialCard(\'' + cardId + '\')" style="background:' + cardColor + '; padding:1rem 1.5rem; border-radius:8px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;">';
+          html += '<div style="flex:1;"><div style="font-size:1.5rem; font-weight:700;">' + smGrouped[smWho].length + '</div><div style="font-size:0.9rem; opacity:0.9;">' + escapeHtml(smWho) + '</div>';
+          if (smGrouped[smWho].some(function(item) { return item.reportingOnly; })) html += '<div style="font-size:0.72rem;opacity:0.85;margin-top:0.2rem;">Property appearances in House Envy stories</div>';
+          if (isFacebook && fbAll.views) html += '<div style="font-size:0.72rem; opacity:0.9; margin-top:0.18rem;">All content: ' + formatNum(fbAll.views) + ' views · ' + formatNum(fbAll.interactions) + ' interactions</div>';
+          html += '</div>';
+          if (platMatched > 0) {
+            html += '<div style="display:flex; gap:1.5rem; opacity:0.95;">';
+            html += '<div style="text-align:center;"><div style="font-size:1.2rem; font-weight:700;">' + formatNum(platViews) + '</div><div style="font-size:0.6rem; opacity:0.8;">Views</div></div>';
+            html += '<div style="text-align:center;"><div style="font-size:1.2rem; font-weight:700;">' + formatNum(platClicks) + '</div><div style="font-size:0.6rem; opacity:0.8;">Link Clicks</div></div>';
+            html += '<div style="text-align:center;"><div style="font-size:1.2rem; font-weight:700;">' + formatNum(platInteractions) + '</div><div style="font-size:0.6rem; opacity:0.8;">Interactions</div></div>';
+            html += '</div>';
+          }
+          html += '<div style="font-size:1.5rem; margin-left:1rem;" id="' + cardId + '-arrow">▼</div></div>';
+          html += '<div id="' + cardId + '" style="display:none; margin-top:0.5rem;"><table class="top-properties-table" style="table-layout:fixed;width:100%;"><thead><tr><th style="width:100px;">Date</th><th>Property</th><th style="width:80px;">Link</th></tr></thead><tbody>';
+          smGrouped[smWho].forEach(function(item) {
+            html += '<tr><td style="white-space:nowrap;">' + escapeHtml(item.date || '') + '</td><td>' + escapeHtml(item.propertyName || item.property || '') + '</td><td>' + (item.link && item.link.trim() !== '' ? '<a href="' + escapeHtml(item.link) + '" target="_blank">View →</a>' : '<span style="color: var(--f-grey-medium);">-</span>') + '</td></tr>';
+            if (item.stats) {
+              var statItems = isFacebook ? [
+                { label: 'Views', val: item.stats.views },
+                { label: 'Reactions', val: item.stats.reactions },
+                { label: 'Comments', val: item.stats.comments },
+                { label: 'Shares', val: item.stats.shares },
+                { label: 'Link Clicks', val: item.stats.linkClicks }
+              ] : [
+                { label: 'Views', val: item.stats.views },
+                { label: 'Likes', val: item.stats.likes },
+                { label: 'Comments', val: item.stats.comments },
+                { label: 'Shares', val: item.stats.shares },
+                { label: 'Saves', val: item.stats.saves }
+              ];
+              html += '<tr><td colspan="3" style="padding:0 0 0.4rem 0; border:none;"><div class="sm-stats-bar">';
+              statItems.forEach(function(st) { html += '<div><div class="sm-stat-val">' + formatNum(st.val) + '</div><div class="sm-stat-lbl">' + st.label + '</div></div>'; });
+              html += '</div></td></tr>';
+            }
+          });
+          html += '</tbody></table></div></div>';
+          smIndex++;
+        }
+        html += '</div>';
+      }
+
+      document.getElementById('content').innerHTML = html;
+    }
+
+    function toggleSocialCard(cardId) {
+      var content = document.getElementById(cardId);
+      var arrow = document.getElementById(cardId + '-arrow');
+      if (!content) return;
+      if (content.style.display === 'none') {
+        content.style.display = 'block';
+        if (arrow) arrow.textContent = '▲';
+      } else {
+        content.style.display = 'none';
+        if (arrow) arrow.textContent = '▼';
+      }
+    }
+
+    // ===== Client marketing report (reportType 'clientReport') =====
+    // Everything in this payload was chosen for the client on creation;
+    // the viewer only lays it out and never adds internal data.
+    var CR_LOGO_SVG = '<svg class="cr-logo-svg" viewBox="0 0 1494.7 405.4" role="img" aria-label="Finest" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M275.9,138.9c-4.2-13.8-10-27.1-17.2-39.8-7.2-12.7-16.4-25.2-27.3-37.4-11-12.2-24.5-21.9-40.6-29.2-16.1-7.2-33.5-10.9-52.3-10.9H63.2v173h148.6v8H63.2v179.3H16V14.2h228.7l33.4,124.1-2.1.5-.1.1h0Z"/><path d="M358.2,381.9h-47.7l2.1-31.8V116.7h43.5v233.4l2.1,31.8h0ZM315.7,18.2c5.3-5.5,11.9-8.2,19.6-8.2s14.4,2.7,19.9,8.2c5.5,5.5,8.2,12.1,8.2,19.9s-2.7,14.3-8.2,19.6-12.1,8-19.9,8-14.3-2.7-19.6-8-8-11.9-8-19.6,2.7-14.4,8-19.9"/><path d="M460.5,381.9h-43V116.6h44.6l-.5,50.9c14.2-17,30.9-30.4,50.1-40.3,19.3-9.9,38.1-15.4,56.5-16.4,18.4-1.1,35.6,1.1,51.7,6.6,16.1,5.5,29.1,15.4,39,29.7,9.9,14.3,15,31.6,15.4,51.7v183h-43v-173.5c0-23.3-5.7-42.2-17-56.5s-25.3-22.9-41.9-25.7c-16.6-2.8-35,0-55.2,8.2-20.2,8.3-38.7,21.8-55.7,40.6l-1.1,206.9.1.1Z"/><path d="M757.1,190.9l116.2-3.7,27.6-1.6c11.3-.7,18.4-4.2,21.2-10.6,2.8-6.4,2-13.3-2.4-20.7s-10.7-13.6-18.8-18.6c-20.2-11.7-42.9-15-68.2-10.1-25.3,5-44.3,15-57,30.2-8.8,9.9-15,21.6-18.6,35M989.2,310.6c-1.9,4.4-7.4,11.9-16.4,22.6-9,10.6-20.1,19.8-33.2,27.6-29.7,19.1-62.3,28.7-97.6,28.7s-36.9-3.7-53.3-11.1c-16.4-7.4-29.9-17.2-40.3-29.2-10.4-12-19.2-25.7-26.3-41.1s-10.5-31-10.3-46.7,2.6-31,7.2-45.9c.7-2.1,1.9-5,3.7-8.8,1.8-3.7,5.8-10.5,12.2-20.4s13.5-19.1,21.5-27.6,18.9-17.1,32.9-25.7c14-8.7,28.9-15.1,44.8-19.4,26.5-6,55.7-5.3,87.5,2.1,8.8,2.1,16.6,5,23.3,8.7s11.6,7.3,14.6,10.6c3,3.4,5.4,7.1,7.2,11.1,1.8,4.1,2.8,7,3.2,8.8s.5,3.5.5,5.3c0,24.4-20.3,37.1-61,38.2h-153.9c-3.5,17.7-3.3,36.3.8,56,4.1,19.6,11.2,37.9,21.5,54.9s24.8,31,43.5,42.2c18.7,11.1,40,16.7,63.7,16.7s36.3-5.9,56.8-17.8,36.6-28.6,48.3-50.1h3.2c-.7,2.5-2,5.9-4,10.3"/><path d="M1072.8,367.1c26.5,15.2,54.5,19.6,83.8,13.3,25.8-5.7,41.7-17.9,47.8-36.6,1.4-4.6,2.1-9.4,2.1-14.3-.4-11-7.2-20.6-20.4-28.9-13.3-8.3-29.3-15.7-48-22-18.7-6.4-37.6-12.9-56.5-19.6s-35.3-15.7-49.1-26.8c-13.8-11.1-21.2-24.1-22.3-39-3.5-39.6,16-65.5,58.6-77.7,42.6-12.2,93.3-7.7,152,13.5v79.6h-3.2c-1.8-12-5.2-23.4-10.3-34.2-5.1-10.8-12.5-21-22-30.5-9.5-9.6-22.5-16.7-38.7-21.5-16.3-4.8-35-6.1-56.2-4-7.1,1.1-13.2,2.2-18.3,3.4-5.1,1.2-11.1,3.4-18,6.4s-12,7.3-15.4,13-4.7,12.6-4,20.7c1.1,12.7,8.4,23.4,22,32.1s30,15.7,49.1,21.2,38.2,11.2,57.3,17.2c19.1,6,35.6,14.5,49.3,25.5,13.8,11,21.2,24.4,22.3,40.3,1.1,13.4-1.3,26.1-7.2,37.9-5.8,11.9-11.8,20.6-17.8,26.3-9.9,8.8-21.5,15.6-34.7,20.2-13.3,4.6-29.6,6.7-49.1,6.4-19.5-.4-35.8-1.1-49.1-2.4-13.3-1.2-32.6-3.6-58.1-7.2l-1.1-108.2,3.2,1.1c0,43.5,17.3,75.2,52,95"/><path d="M1434.6,358.1c-17,14.1-33.7,22.7-50.1,25.7s-31.8,2.7-46.2-1.1c-14.3-3.7-25.9-11.7-34.7-23.9-8.8-12.2-13.3-27-13.3-44.3v-167.1h-34.5l77.5-95v64.2h109.8l-26.5,30.8h-83.3l-1.6,182.5c-.4,22.6,9.2,36.4,28.7,41.4,20.9,5.3,44.2-1.4,70-20.2,16.6-12.4,31.1-28.3,43.5-47.8h4.8c-12.4,22.3-27.1,40.5-44,54.7"/></svg>';
+
+    function crEsc(text) {
+      return escapeHtml(text).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function crSafeUrl(url) {
+      var s = String(url || '').trim();
+      return /^https?:\/\//i.test(s) ? s : '';
+    }
+
+    function displayClientReport(report) {
+      document.body.classList.add('client-report');
+      document.title = (report.propertyName ? report.propertyName + ' · ' : '') + 'Marketing report · Finest';
+      var propertyUrl = crSafeUrl(report.propertyUrl);
+      var image = crSafeUrl(report.propertyImage);
+      var html = '';
+
+      html += '<div class="cr">';
+      html += '<header class="cr-hero"><div class="cr-wrap">';
+      html += '<div class="cr-top"><div>' + CR_LOGO_SVG + '<div class="cr-logo-sub" style="margin-top:10px;">Your marketing report</div></div>';
+      html += '<div class="cr-actions"><button type="button" class="cr-btn" onclick="window.print()">Save as PDF</button>';
+      if (propertyUrl) html += '<a class="cr-btn" href="' + crEsc(propertyUrl) + '" target="_blank" rel="noopener">View the listing</a>';
+      html += '</div></div>';
+      html += '<div class="cr-hero-grid"><div class="cr-hero-text">';
+      html += '<div class="cr-pills">';
+      if (report.rangeLabel) html += '<span class="cr-pill accent">' + crEsc(report.rangeLabel) + '</span>';
+      var statusPrice = [report.statusLabel, report.priceLabel].filter(Boolean).join(' · ');
+      if (statusPrice) html += '<span class="cr-pill">' + crEsc(statusPrice) + '</span>';
+      html += '</div>';
+      html += '<h1 class="cr-title">' + crEsc(report.propertyName || '') + '</h1>';
+      if (report.headline) html += '<p class="cr-headline">' + crEsc(report.headline) + '</p>';
+      if (report.agentLabel) html += '<span class="cr-agent">Marketed by ' + crEsc(report.agentLabel) + ' in partnership with Finest</span>';
+      html += '</div>';
+      if (image) html += '<div class="cr-photo"><img src="' + crEsc(image) + '" alt="' + crEsc(report.propertyName || 'Property') + '" onerror="this.parentNode.classList.add(\'cr-hidden\')"></div>';
+      html += '</div></div></header>';
+
+      html += '<main class="cr-wrap cr-main">';
+
+      // At a glance
+      var kpis = report.kpis || [];
+      if (kpis.length) {
+        html += '<section class="cr-section"><h2 class="cr-h2">At a glance</h2><div class="cr-kpis">';
+        kpis.forEach(function(k) {
+          html += '<div class="cr-kpi"><span class="cr-kpi-label">' + crEsc(k.label) + '</span><span class="cr-kpi-value num">' + crEsc(k.value) + '</span><span class="cr-kpi-note">' + crEsc(k.note || '') + '</span></div>';
+        });
+        html += '</div>';
+        if (report.badge && report.badge.top) {
+          html += '<div class="cr-badge"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B8462C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2-5.5-2.9-5.5 2.9 1-6.2L3 9.6l6.2-.9z"></path></svg>';
+          html += '<span>One of the <strong>' + crEsc(String(report.badge.top)) + '% most-viewed homes</strong> on finest.co.uk over this period.</span></div>';
+        }
+        html += '</section>';
+      }
+
+      // Chart
+      if (report.chart && report.chart.trend && report.chart.trend.length) {
+        var hasPress = (report.chart.moments || []).some(function(m) { return m.type === 'press'; });
+        var hasSocial = (report.chart.moments || []).some(function(m) { return m.type === 'social'; });
+        html += '<section class="cr-section"><div class="cr-section-head"><h2 class="cr-h2">Interest in your home</h2><div class="cr-legend">';
+        html += '<span><span style="width:18px; height:3px; background:#002A29; border-radius:2px; display:inline-block;"></span>Total views to date</span>';
+        if (hasPress) html += '<span><span class="cr-dot" style="background:#E7755C;"></span>Press</span>';
+        if (hasSocial) html += '<span><span class="cr-dot" style="background:#2F6461;"></span>Social &amp; newsletter</span>';
+        html += '</div></div><div class="cr-card cr-chart-box"><canvas id="crTrendChart"></canvas></div>';
+        var peak = report.chart.peak;
+        if (peak && peak.v) {
+          html += '<p class="cr-muted" style="margin:0;">Busiest day: <strong>' + crEsc(peak.date) + '</strong>' + (peak.isLaunch ? ', launch day,' : ',') + ' with ' + Number(peak.v).toLocaleString('en-GB') + ' views' + (!peak.isLaunch && peak.note ? ', following the ' + crEsc(peak.note) : '') + '.</p>';
+        }
+        html += '</section>';
+      }
+
+      // Press
+      var press = report.press || [];
+      var subs = report.submissions;
+      if (press.length || (subs && subs.items && subs.items.length)) {
+        html += '<section class="cr-section"><div class="cr-section-head"><h2 class="cr-h2">In the press</h2>';
+        if (press.length) html += '<span class="cr-muted">' + press.length + (press.length === 1 ? ' feature' : ' features') + '</span>';
+        html += '</div>';
+        if (press.length) {
+          html += '<div class="cr-grid press">';
+          press.forEach(function(p) {
+            var link = crSafeUrl(p.link);
+            var img = crSafeUrl(p.image);
+            html += '<article class="cr-card cr-press">';
+            if (img) html += '<div class="cr-press-img"><img src="' + crEsc(img) + '" alt="" loading="lazy" onerror="this.parentNode.classList.add(\'cr-hidden\')"></div>';
+            html += '<div class="cr-press-body"><span class="cr-eyebrow">' + crEsc(p.publication) + (p.date ? ' · ' + crEsc(p.date) : '') + '</span>';
+            html += '<span class="cr-press-title">' + crEsc(p.theme || ('Featured in ' + p.publication)) + '</span>';
+            if (link) html += '<a href="' + crEsc(link) + '" target="_blank" rel="noopener" style="font-size:14px; font-weight:700;">Read the article</a>';
+            html += '</div></article>';
+          });
+          html += '</div>';
+        }
+        if (subs && subs.items && subs.items.length) {
+          html += '<div class="cr-card cr-subs"><div class="cr-section-head"><h3 style="margin:0; font-size:18px; font-weight:800; color:#0E2524;">Presented to editors and journalists</h3>';
+          html += '<span class="cr-muted">Your home has been put forward to <strong>' + subs.titles + (subs.titles === 1 ? ' title' : ' titles') + '</strong></span></div><div class="cr-subs-list">';
+          subs.items.forEach(function(s) {
+            html += '<div class="cr-subs-row"><span style="display:flex; flex-direction:column; gap:1px;"><span style="font-size:15px; font-weight:700;">' + crEsc(s.publication) + '</span>';
+            if (s.theme) html += '<span style="font-size:12px; color:#5B6B69;">' + crEsc(s.theme) + '</span>';
+            html += '</span><span style="display:flex; flex-direction:column; align-items:flex-end; gap:3px;"><span class="num" style="font-size:12px; font-weight:600; color:#5B6B69;">' + crEsc(s.date || '') + '</span>';
+            if (s.featured) html += '<span class="cr-featured">Featured</span>';
+            html += '</span></div>';
+          });
+          html += '</div></div>';
+        }
+        html += '</section>';
+      }
+
+      // Social and newsletter
+      if (report.social && report.social.items && report.social.items.length) {
+        var posts = report.social.items;
+        html += '<section class="cr-section"><div class="cr-section-head"><h2 class="cr-h2">Shared with our audience</h2>';
+        if (report.social.reach) html += '<span class="cr-muted"><strong class="num">' + Number(report.social.reach).toLocaleString('en-GB') + '</strong> combined reach across ' + posts.length + (posts.length === 1 ? ' post' : ' posts') + '</span>';
+        html += '</div><div class="cr-grid social">';
+        posts.forEach(function(s, idx) {
+          var link = crSafeUrl(s.link);
+          html += '<article class="cr-card cr-post' + (idx >= 8 ? ' cr-hidden cr-more-post' : '') + '">';
+          html += '<div style="display:flex; justify-content:space-between; align-items:center; gap:8px;"><span class="cr-platform ' + crEsc(s.key || '') + '">' + crEsc(s.platform) + '</span><span class="num" style="font-size:12px; font-weight:600; color:#5B6B69;">' + crEsc(s.date || '') + '</span></div>';
+          if (s.text) html += '<span style="font-size:15px; font-weight:700; line-height:1.4; color:#0E2524;">' + crEsc(s.text) + '</span>';
+          if (s.stats && s.stats.length) {
+            html += '<div class="cr-post-stats">';
+            s.stats.forEach(function(st) { html += '<span class="cr-post-stat"><strong class="num">' + crEsc(st.value) + '</strong><span>' + crEsc(st.label) + '</span></span>'; });
+            html += '</div>';
+          }
+          if (link) html += '<a href="' + crEsc(link) + '" target="_blank" rel="noopener" style="font-size:13px; font-weight:700;">' + (s.key === 'newsletter' ? 'View newsletter' : 'View post') + '</a>';
+          html += '</article>';
+        });
+        html += '</div>';
+        if (posts.length > 8) html += '<button type="button" class="cr-btn" style="align-self:flex-start; color:#0E2524 !important; border-color:#D9D3C9;" onclick="crShowAllPosts(this)">Show all ' + posts.length + ' posts</button>';
+        html += '</section>';
+      }
+
+      // Channels and time spent
+      var channels = report.channels || [];
+      if (channels.length || report.time) {
+        html += '<section class="cr-grid two">';
+        if (channels.length) {
+          var maxShare = Math.max.apply(null, channels.map(function(c) { return c.share; })) || 1;
+          var colours = ['#002A29', '#2F6461', '#E7755C', '#6E9592', '#B39A6B', '#9AA8A6'];
+          html += '<div class="cr-section"><h2 class="cr-h2">How buyers found your home</h2>';
+          channels.forEach(function(c, i) {
+            html += '<div class="cr-bar-row"><div class="cr-bar-top"><span style="font-weight:600;">' + crEsc(c.label) + '</span><span class="num" style="font-weight:700;">' + c.share + '%</span></div>';
+            html += '<div class="cr-bar"><div style="width:' + Math.round(c.share / maxShare * 100) + '%; background:' + colours[i % colours.length] + ';"></div></div></div>';
+          });
+          html += '</div>';
+        }
+        if (report.time) {
+          html += '<div class="cr-section"><h2 class="cr-h2">Time spent with the listing</h2><div class="cr-card cr-big">';
+          html += '<span class="cr-big-value num">' + crEsc(report.time.value) + '</span>';
+          html += '<span style="font-size:15px; line-height:1.55; color:#3E5250;">' + (report.time.pctAbove ? '<strong style="color:#0E2524;">' + report.time.pctAbove + '% longer than the average Finest listing.</strong> ' : '') + 'Visitors are taking their time over the photos, floorplan and details.</span>';
+          html += '</div></div>';
+        }
+        html += '</section>';
+      }
+
+      // Places and returning visitors
+      if (report.places || report.returning) {
+        html += '<section class="cr-grid two">';
+        if (report.places && ((report.places.cities && report.places.cities.length) || report.places.countryCount > 1)) {
+          var placeCities = report.places.cities || [];
+          var maxCity = Math.max.apply(null, placeCities.map(function(c) { return c.share || 0; }).concat([1]));
+          html += '<div class="cr-section"><h2 class="cr-h2">Where viewers are based</h2>';
+          if (report.places.countryCount > 1) html += '<span class="cr-muted">People in <strong>' + report.places.countryCount + ' countries</strong> have looked at your home.' + (placeCities.length ? ' Share of all viewers by city:' : '') + '</span>';
+          placeCities.forEach(function(c) {
+            var amount = c.share + '%';
+            html += '<div class="cr-bar-row"><div class="cr-bar-top"><span style="font-weight:600;">' + crEsc(c.name) + '</span><span class="num" style="font-weight:700;">' + amount + '</span></div>';
+            html += '<div class="cr-bar"><div style="width:' + Math.round((c.share || 0) / maxCity * 100) + '%; background:#2F6461;"></div></div></div>';
+          });
+          html += '</div>';
+        }
+        if (report.returning) {
+          html += '<div class="cr-section"><h2 class="cr-h2">Coming back for another look</h2><div class="cr-card cr-big">';
+          html += '<span class="cr-big-value num">' + crEsc(report.returning.value) + '</span>';
+          html += '<span style="font-size:15px; line-height:1.55; color:#3E5250;">people returned to the listing more than once, a strong sign of serious buyers.</span></div></div>';
+        }
+        html += '</section>';
+      }
+
+      // Coming up
+      var upcoming = report.upcoming || [];
+      if (upcoming.length) {
+        html += '<section class="cr-upcoming"><div style="display:flex; flex-direction:column; gap:8px;"><span style="font-size:12px; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:#E7755C;">Coming up</span>';
+        html += '<h2 class="cr-serif" style="margin:0; font-size:28px; line-height:1.2; color:#F3EFE8;">What we have planned next</h2></div>';
+        upcoming.forEach(function(u) {
+          html += '<div class="cr-upcoming-item"><span class="num" style="font-size:13px; font-weight:700; color:#F2C46D;">' + crEsc(u.date) + '</span><span style="font-size:16px; font-weight:700;">' + crEsc(u.label) + '</span></div>';
+        });
+        html += '</section>';
+      }
+
+      html += '<footer class="cr-footer"><span>' + crEsc(report.sourceNote || '') + '</span><span>finest.co.uk</span></footer>';
+      html += '</main></div>';
+
+      var container = document.querySelector('.container');
+      (container || document.body).innerHTML = html;
+      if (container) {
+        container.style.maxWidth = 'none';
+        container.style.margin = '0';
+      }
+      if (report.chart && report.chart.trend && report.chart.trend.length) drawClientTrendChart(report.chart);
+    }
+
+    function crShowAllPosts(btn) {
+      var hidden = document.querySelectorAll('.cr-more-post');
+      for (var i = 0; i < hidden.length; i++) hidden[i].classList.remove('cr-hidden');
+      if (btn && btn.parentNode) btn.parentNode.removeChild(btn);
+    }
+
+    function drawClientTrendChart(chart) {
+      var canvas = document.getElementById('crTrendChart');
+      if (!canvas || typeof Chart === 'undefined') return;
+      var trend = chart.trend || [];
+      var labels = [];
+      var views = [];
+      var index = {};
+      trend.forEach(function(t, i) {
+        index[t.d] = i;
+        var parts = String(t.d).split('-');
+        var monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        labels.push(parts.length === 3 ? Number(parts[2]) + ' ' + monthNames[Number(parts[1]) - 1] : t.d);
+        views.push(t.v);
+      });
+      function markerData(type) {
+        var data = views.map(function() { return null; });
+        var names = views.map(function() { return []; });
+        (chart.moments || []).forEach(function(m) {
+          if (m.type !== type || index[m.d] === undefined) return;
+          data[index[m.d]] = views[index[m.d]];
+          names[index[m.d]].push(m.label);
+        });
+        return { data: data, names: names };
+      }
+      // Always a running total (links created before this change carry mode 'daily').
+      var cumulative = true;
+      var daily = views.slice();
+      if (cumulative) {
+        var running = 0;
+        views = views.map(function(v) { running += v; return running; });
+      }
+      var pressMarks = markerData('press');
+      var socialMarks = markerData('social');
+      var ctx = canvas.getContext('2d');
+      var crChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            { label: 'Press', data: pressMarks.data, names: pressMarks.names, showLine: false, pointRadius: 7, pointHoverRadius: 9, pointBackgroundColor: '#E7755C', pointBorderColor: '#FFFFFF', pointBorderWidth: 2, order: 0 },
+            { label: 'Social & newsletter', data: socialMarks.data, names: socialMarks.names, showLine: false, pointRadius: 6, pointHoverRadius: 8, pointBackgroundColor: '#2F6461', pointBorderColor: '#FFFFFF', pointBorderWidth: 2, order: 1 },
+            { label: 'Daily views', data: views, daily: daily, borderColor: '#002A29', backgroundColor: 'rgba(0,42,41,0.06)', borderWidth: 2.5, fill: true, tension: cumulative ? 0 : 0.3, pointRadius: 0, pointHoverRadius: 5, order: 2 }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              filter: function(item) { return item.raw !== null; },
+              callbacks: {
+                label: function(item) {
+                  if (item.dataset.label === 'Daily views') {
+                    var dayViews = (item.dataset.daily || [])[item.dataIndex];
+                    return cumulative ? Number(item.raw).toLocaleString('en-GB') + ' views to date (' + dayViews + ' that day)' : item.raw + ' views';
+                  }
+                  var names = (item.dataset.names || [])[item.dataIndex] || [];
+                  return item.dataset.label + ': ' + names.join(', ');
+                }
+              }
+            }
+          },
+          scales: {
+            x: { grid: { display: false }, ticks: { maxTicksLimit: 6, color: '#5B6B69', maxRotation: 0 } },
+            y: { beginAtZero: true, grid: { color: '#ECE7DF' }, ticks: { color: '#5B6B69', precision: 0 } }
+          }
+        }
+      });
+      // Redraw at the page width when printing / saving as PDF.
+      window.addEventListener('beforeprint', function() { crChart.resize(); });
+      window.addEventListener('afterprint', function() { crChart.resize(); });
+    }
+
+    function showError(message) {
+      document.getElementById('reportSubtitle').textContent = '';
+      document.getElementById('content').innerHTML = '<div class="error"><p>' + escapeHtml(message) + '</p></div>';
+    }
+
+    function formatNum(n) {
+      n = parseInt(n, 10) || 0;
+      if (n >= 1000000) return (n / 1000000).toFixed(1) + 'm';
+      if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
+      return String(n);
+    }
+    function compactNumber(n) { return formatNum(n); }
+    function escapeHtml(text) {
+      if (text === null || text === undefined) return '';
+      var div = document.createElement('div');
+      div.textContent = String(text);
+      return div.innerHTML;
+    }
+    function formatDisplayDate(dateStr) {
+      if (!dateStr) return '';
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        var parts = dateStr.split('-');
+        return new Date(parts[0], parts[1] - 1, parts[2]).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+      }
+      var prDate = parsePRDate(dateStr);
+      if (prDate) return prDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+      return dateStr;
+    }
+    function formatDisplayDateTime(dateStr) {
+      if (!dateStr) return '';
+      var d = new Date(dateStr);
+      if (!isNaN(d.getTime())) {
+        return d.toLocaleString('en-GB', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      }
+      return dateStr;
+    }
+    function formatChartDate(dateStr) {
+      var d = /^\d{4}-\d{2}-\d{2}$/.test(dateStr) ? new Date(dateStr + 'T00:00:00') : new Date(dateStr);
+      return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+    }
+    function formatDuration(seconds) {
+      var total = Math.round(Number(seconds) || 0);
+      var mins = Math.floor(total / 60);
+      var secs = total % 60;
+      if (mins <= 0) return secs + 's';
+      return mins + 'm ' + secs + 's';
+    }
+  </script>
+</body>
+</html>
