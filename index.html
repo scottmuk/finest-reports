@@ -2221,17 +2221,13 @@
         html += '</section>';
       }
 
-      // The Finest Edit: network-wide (Finest and partner homes), never filtered
-      // to nothing; the selected office's homes are highlighted. Per-home figures
-      // are views from the newsletter (GA), which include homes reached via a
-      // collection page, not just direct clicks in the email.
+      // The Finest Edit: brand reach and engagement, in a few plain figures.
+      // Network-wide; an office sees which of its homes were featured.
       (r.editions || []).forEach(function(ed) {
         var office = msState.office, allOff = office === 'All offices';
-        var featured = ed.featured || [];
-        var viewed = featured.filter(function(h) { return h.views > 0; });
-        var quiet = featured.filter(function(h) { return !(h.views > 0); });
-        var maxViews = Math.max.apply(null, viewed.map(function(h) { return h.views; }).concat([1]));
         var fmt = function(n) { return Number(n || 0).toLocaleString('en-GB'); };
+        var ctr = ed.sent && ed.clicked ? (Math.round(ed.clicked / ed.sent * 1000) / 10) + '%' : '';
+        var featured = ed.featured || [];
 
         html += '<section class="cr-section"><div class="cr-section-head"><div><h2 class="cr-h2">' + crEsc(ed.title) + '</h2>';
         var sub = [];
@@ -2241,16 +2237,19 @@
         if (crSafeUrl(ed.link)) html += '<a href="' + crEsc(crSafeUrl(ed.link)) + '" target="_blank" rel="noopener" style="font-size:14px; font-weight:700; white-space:nowrap;">View the newsletter →</a>';
         html += '</div>';
 
-        // Brand reach and engagement, kept to a few plain figures.
         var monthWord = String(ed.title || '').replace(/^The Finest Edit · /, '').split(' ')[0];
-        var sentence = 'Our ' + (monthWord || '') + ' issue reached ' + fmt(ed.sent) + ' subscribers.';
-        if (ed.clicked) sentence += ' ' + fmt(ed.clicked) + ' readers clicked through' + (ed.visits ? ', and they visited our listings ' + fmt(ed.visits) + ' times.' : '.');
+        var sentence = 'Our ' + monthWord + ' issue reached ' + fmt(ed.sent) + ' subscribers.';
+        var after = [];
+        if (ed.visits) after.push('visiting our listings ' + fmt(ed.visits) + ' times');
+        if (ed.homesBrowsed > 1) after.push('browsing ' + fmt(ed.homesBrowsed) + ' different homes');
+        if (ctr) sentence += ' ' + ctr + ' clicked through' + (after.length ? ', ' + after.join(' and ') : '') + '.';
         html += '<p class="ms-ed-sentence">' + crEsc(sentence) + '</p>';
+
         var tiles = [];
         if (ed.sent) tiles.push(['Subscribers reached', fmt(ed.sent), 'Received the newsletter']);
-        if (ed.clicked) tiles.push(['Readers who clicked through', fmt(ed.clicked), ed.sent ? (Math.round(ed.clicked / ed.sent * 1000) / 10) + '% of subscribers' : '']);
+        if (ctr) tiles.push(['Click-through rate', ctr, 'Of subscribers clicked through']);
         if (ed.visits) tiles.push(['Visits to our listings', fmt(ed.visits), 'From the newsletter']);
-        if (ed.requests) tiles.push(['Viewing requests', fmt(ed.requests), 'Sent after reading the newsletter']);
+        if (featured.length) tiles.push(['Homes featured', fmt(featured.length), 'Finest and partner homes']);
         if (tiles.length) {
           html += '<div class="cr-kpis">';
           tiles.forEach(function(t) { html += '<div class="cr-kpi"><span class="cr-kpi-label">' + crEsc(t[0]) + '</span><span class="cr-kpi-value num">' + crEsc(t[1]) + '</span><span class="cr-kpi-note">' + crEsc(t[2]) + '</span></div>'; });
@@ -2261,39 +2260,13 @@
           var mine = featured.filter(function(h) { return h.office === office; });
           var oname = displayOffice(office).replace(/^Finest /, '');
           if (mine.length) {
-            var mv = mine.reduce(function(sum, h) { return sum + (h.views || 0); }, 0);
-            var mr = mine.reduce(function(sum, h) { return sum + (h.requests || 0); }, 0);
-            html += '<div class="ms-ed-office">' + mine.length + ' ' + crEsc(oname) + (mine.length === 1 ? ' home' : ' homes') + ' featured' + (mv ? ' · ' + fmt(mv) + ' views from the newsletter' : '') + (mr ? ' · ' + mr + (mr === 1 ? ' viewing request' : ' viewing requests') : '') + '</div>';
+            html += '<div class="ms-ed-office">' + mine.length + ' ' + crEsc(oname) + (mine.length === 1 ? ' home' : ' homes') + ' featured in this issue: ' + mine.map(function(h) { return crEsc(h.name); }).join(', ') + '.</div>';
           } else {
             var next = new Date(r.year, r.month, 1);
             var nextName = next.toLocaleString('en-GB', { month: 'long' });
             html += '<div class="ms-ed-office">No ' + crEsc(oname) + ' homes in this issue. The ' + nextName + ' issue goes out in the first week of ' + nextName + '; ask marketing if you’d like a home featured.</div>';
           }
         }
-
-        if (viewed.length) {
-          html += '<h3 class="ms-h3">Featured homes · views from the newsletter</h3><div class="cr-posts">';
-          viewed.forEach(function(h) {
-            var yours = !allOff && h.office === office;
-            var who = h.partner ? 'Partner: ' + (h.agent || 'agent') : displayOffice(h.office || 'Finest');
-            html += '<div class="ms-ed-row' + (yours ? ' yours' : '') + '">';
-            html += '<span class="ms-prop-name">' + crEsc(h.name) + (yours ? ' <span class="ms-yours">Your office</span>' : '') + (h.requests ? ' <span class="ms-req">' + h.requests + (h.requests === 1 ? ' viewing request' : ' viewing requests') + '</span>' : '') + '</span>';
-            html += '<span class="ms-office-name' + (h.partner ? ' partner' : '') + '">' + crEsc(who) + '</span>';
-            html += '<span class="cr-bar"><span style="display:block; height:8px; border-radius:4px; width:' + Math.round(h.views / maxViews * 100) + '%; background:#7A5E2E;"></span></span>';
-            html += '<span class="cr-post-fig num">' + fmt(h.views) + '<span class="ms-ed-unit"> views</span></span></div>';
-          });
-          html += '</div>';
-        }
-        if (quiet.length) {
-          html += '<p class="cr-muted" style="margin:0;"><strong style="color:#0E2524;">Also featured:</strong> ' + quiet.map(function(h) {
-            var mark = !allOff && h.office === office;
-            return (mark ? '<strong style="color:#B8462C;">' : '') + crEsc(h.name) + (mark ? '</strong>' : '');
-          }).join(', ') + '</p>';
-        }
-        if (ed.otherListings) html += '<p class="cr-muted" style="margin:0;">Readers also went on to browse <strong style="color:#0E2524;">' + ed.otherListings + ' other listings</strong> during those visits.</p>';
-
-        html += '<p class="cr-muted" style="margin:0; font-size:12px;">Views from the newsletter include homes reached through a collection or article, not just direct clicks.' +
-          (ed.requests ? ' Viewing requests are enquiry forms sent during those visits: a guide rather than an exact count.' : '') + '</p>';
         html += '</section>';
       });
 
