@@ -660,7 +660,7 @@
         html += '<tr>';
         html += '<td>' + (item.propertyUrl ? '<a href="' + escapeHtml(item.propertyUrl) + '" target="_blank">' + escapeHtml(item.propertyName) + '</a>' : escapeHtml(item.propertyName)) + ' <span class="property-url">' + escapeHtml(item.propertyId || '') + '</span></td>';
         html += '<td style="text-align:center;">' + escapeHtml(item.guidePrice || '—') + '</td>';
-        html += '<td>' + escapeHtml(item.agent || '') + '</td>';
+        html += '<td>' + escapeHtml(displayOffice(item.agent) || '') + '</td>';
         html += '<td style="text-align:center;">' + (item.weeksOnMarket != null ? escapeHtml(String(item.weeksOnMarket) + 'w') : '—') + '</td>';
         html += '<td style="text-align:center;">' + escapeHtml(item.lastFacebook || 'Never') + '</td>';
         html += '<td style="text-align:center;">' + statusHtml + '</td>';
@@ -688,7 +688,7 @@
           html += '<td>' + (london.propertyUrl ? '<a href="' + escapeHtml(london.propertyUrl) + '" target="_blank">' + escapeHtml(london.propertyName || london.propertyId || '') + '</a>' : escapeHtml(london.propertyName || london.propertyId || '')) + ' <span class="property-url">' + escapeHtml(london.propertyId || '') + '</span>';
           if (london.londonNeedsUpdate) html += ' <span class="cp-badge" style="background:rgba(251,191,36,0.16); color:#fde68a; border:1px solid rgba(251,191,36,0.28);">Needs update</span>';
           html += '</td>';
-          html += '<td style="color:' + getShareAgentColor(london.agent) + '; font-weight:600;">' + escapeHtml(london.agent || 'Unassigned') + '</td>';
+          html += '<td style="color:' + getShareAgentColor(london.agent) + '; font-weight:600;">' + escapeHtml(displayOffice(london.agent) || 'Unassigned') + '</td>';
           html += '<td style="text-align:center;">' + escapeHtml(london.status || '—') + '</td>';
           html += '<td style="text-align:center;">' + escapeHtml(london.priceDisplay || '—') + '</td>';
           html += '<td style="text-align:center;">' + escapeHtml(london.londonAddedDate || '—') + '</td>';
@@ -720,7 +720,7 @@
           html += '<tr>';
           html += '<td>' + (row.propertyUrl ? '<a href="' + escapeHtml(row.propertyUrl) + '" target="_blank">' + escapeHtml(row.propertyName) + '</a>' : escapeHtml(row.propertyName)) + ' <span class="property-url">' + escapeHtml(row.propertyId || '') + '</span></td>';
           html += '<td style="text-align:center;">' + escapeHtml(row.guidePrice || '—') + '</td>';
-          html += '<td>' + escapeHtml(row.agent || '') + '</td>';
+          html += '<td>' + escapeHtml(displayOffice(row.agent) || '') + '</td>';
           html += '<td style="text-align:center;"><span class="cp-badge" style="background:' + urgencyColor + '22;color:' + urgencyColor + ';">' + escapeHtml(row.urgency || '—') + '</span></td>';
           html += '</tr>';
           if (row.note) html += '<tr class="cp-note-row"><td colspan="4">📝 ' + escapeHtml(row.note) + '</td></tr>';
@@ -850,7 +850,7 @@
       } else {
         html += '<div class="cp-post-title">' + escapeHtml(title) + ' <span class="property-url">' + escapeHtml(post.propertyId || '') + '</span></div>';
       }
-      html += '<div class="cp-post-meta">' + escapeHtml(post.agent || '') + (time ? ' · ' + escapeHtml(time) : '') + escapeHtml(themeText) + '</div>';
+      html += '<div class="cp-post-meta">' + escapeHtml(displayOffice(post.agent) || '') + (time ? ' · ' + escapeHtml(time) : '') + escapeHtml(themeText) + '</div>';
       html += '<span class="cp-platform ' + platformClass + '">' + escapeHtml(getCpPlatformLabel(platform)) + '</span>';
       html += renderCpReasonBadge(post.contentReason);
       html += statusHtml;
@@ -1038,7 +1038,7 @@
       html += '<div class="dashboard-header">';
       if (report.propertyImage) html += '<div class="property-image-wrapper"><img class="property-image" src="' + escapeHtml(report.propertyImage) + '" alt="' + escapeHtml(report.propertyName || '') + '"></div>';
       html += '<div class="property-info"><h2 class="property-title">' + escapeHtml(header.propertyName || report.propertyName || '') + '</h2>';
-      html += '<p style="color:var(--f-grey-light); margin:0.25rem 0;">' + escapeHtml(header.propertyId || '') + ' · ' + escapeHtml(header.agent || '') + '</p>';
+      html += '<p style="color:var(--f-grey-light); margin:0.25rem 0;">' + escapeHtml(header.propertyId || '') + ' · ' + escapeHtml(displayOffice(header.agent) || '') + '</p>';
       if (report.propertyUrl) html += '<p class="property-path"><a href="' + escapeHtml(report.propertyUrl) + '" target="_blank" rel="noopener">View property listing</a></p>';
       html += '</div><div class="date-range-display">' + escapeHtml((story.dateRange || {}).startDate || '') + ' - ' + escapeHtml((story.dateRange || {}).endDate || '') + '</div></div>';
 
@@ -1545,7 +1545,7 @@
           var prop = topProperties[tp];
           html += '<tr><td>' + (tp + 1) + '</td><td><div style="font-weight:500;">' + escapeHtml(prop.title || prop.name || '') + '</div>';
           if (prop.url) html += '<div class="property-url">' + escapeHtml(prop.url) + '</div>';
-          html += '</td><td style="color:' + escapeHtml(prop.agentColor || getShareAgentColor(prop.agent || '')) + '; font-weight:600;">' + escapeHtml(prop.agent || 'Unassigned') + '</td><td style="text-align:right; font-weight:600;">' + (prop.views || prop.screenPageViews || 0).toLocaleString() + '</td></tr>';
+          html += '</td><td style="color:' + escapeHtml(prop.agentColor || getShareAgentColor(prop.agent || '')) + '; font-weight:600;">' + escapeHtml(displayOffice(prop.agent) || 'Unassigned') + '</td><td style="text-align:right; font-weight:600;">' + (prop.views || prop.screenPageViews || 0).toLocaleString() + '</td></tr>';
         }
         html += '</tbody></table></div>';
       }
@@ -1675,6 +1675,15 @@
     // Everything in this payload was chosen for the client on creation;
     // the viewer only lays it out and never adds internal data.
     var CR_LOGO_SVG = '<svg class="cr-logo-svg" viewBox="0 0 1494.7 405.4" role="img" aria-label="Finest" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M275.9,138.9c-4.2-13.8-10-27.1-17.2-39.8-7.2-12.7-16.4-25.2-27.3-37.4-11-12.2-24.5-21.9-40.6-29.2-16.1-7.2-33.5-10.9-52.3-10.9H63.2v173h148.6v8H63.2v179.3H16V14.2h228.7l33.4,124.1-2.1.5-.1.1h0Z"/><path d="M358.2,381.9h-47.7l2.1-31.8V116.7h43.5v233.4l2.1,31.8h0ZM315.7,18.2c5.3-5.5,11.9-8.2,19.6-8.2s14.4,2.7,19.9,8.2c5.5,5.5,8.2,12.1,8.2,19.9s-2.7,14.3-8.2,19.6-12.1,8-19.9,8-14.3-2.7-19.6-8-8-11.9-8-19.6,2.7-14.4,8-19.9"/><path d="M460.5,381.9h-43V116.6h44.6l-.5,50.9c14.2-17,30.9-30.4,50.1-40.3,19.3-9.9,38.1-15.4,56.5-16.4,18.4-1.1,35.6,1.1,51.7,6.6,16.1,5.5,29.1,15.4,39,29.7,9.9,14.3,15,31.6,15.4,51.7v183h-43v-173.5c0-23.3-5.7-42.2-17-56.5s-25.3-22.9-41.9-25.7c-16.6-2.8-35,0-55.2,8.2-20.2,8.3-38.7,21.8-55.7,40.6l-1.1,206.9.1.1Z"/><path d="M757.1,190.9l116.2-3.7,27.6-1.6c11.3-.7,18.4-4.2,21.2-10.6,2.8-6.4,2-13.3-2.4-20.7s-10.7-13.6-18.8-18.6c-20.2-11.7-42.9-15-68.2-10.1-25.3,5-44.3,15-57,30.2-8.8,9.9-15,21.6-18.6,35M989.2,310.6c-1.9,4.4-7.4,11.9-16.4,22.6-9,10.6-20.1,19.8-33.2,27.6-29.7,19.1-62.3,28.7-97.6,28.7s-36.9-3.7-53.3-11.1c-16.4-7.4-29.9-17.2-40.3-29.2-10.4-12-19.2-25.7-26.3-41.1s-10.5-31-10.3-46.7,2.6-31,7.2-45.9c.7-2.1,1.9-5,3.7-8.8,1.8-3.7,5.8-10.5,12.2-20.4s13.5-19.1,21.5-27.6,18.9-17.1,32.9-25.7c14-8.7,28.9-15.1,44.8-19.4,26.5-6,55.7-5.3,87.5,2.1,8.8,2.1,16.6,5,23.3,8.7s11.6,7.3,14.6,10.6c3,3.4,5.4,7.1,7.2,11.1,1.8,4.1,2.8,7,3.2,8.8s.5,3.5.5,5.3c0,24.4-20.3,37.1-61,38.2h-153.9c-3.5,17.7-3.3,36.3.8,56,4.1,19.6,11.2,37.9,21.5,54.9s24.8,31,43.5,42.2c18.7,11.1,40,16.7,63.7,16.7s36.3-5.9,56.8-17.8,36.6-28.6,48.3-50.1h3.2c-.7,2.5-2,5.9-4,10.3"/><path d="M1072.8,367.1c26.5,15.2,54.5,19.6,83.8,13.3,25.8-5.7,41.7-17.9,47.8-36.6,1.4-4.6,2.1-9.4,2.1-14.3-.4-11-7.2-20.6-20.4-28.9-13.3-8.3-29.3-15.7-48-22-18.7-6.4-37.6-12.9-56.5-19.6s-35.3-15.7-49.1-26.8c-13.8-11.1-21.2-24.1-22.3-39-3.5-39.6,16-65.5,58.6-77.7,42.6-12.2,93.3-7.7,152,13.5v79.6h-3.2c-1.8-12-5.2-23.4-10.3-34.2-5.1-10.8-12.5-21-22-30.5-9.5-9.6-22.5-16.7-38.7-21.5-16.3-4.8-35-6.1-56.2-4-7.1,1.1-13.2,2.2-18.3,3.4-5.1,1.2-11.1,3.4-18,6.4s-12,7.3-15.4,13-4.7,12.6-4,20.7c1.1,12.7,8.4,23.4,22,32.1s30,15.7,49.1,21.2,38.2,11.2,57.3,17.2c19.1,6,35.6,14.5,49.3,25.5,13.8,11,21.2,24.4,22.3,40.3,1.1,13.4-1.3,26.1-7.2,37.9-5.8,11.9-11.8,20.6-17.8,26.3-9.9,8.8-21.5,15.6-34.7,20.2-13.3,4.6-29.6,6.7-49.1,6.4-19.5-.4-35.8-1.1-49.1-2.4-13.3-1.2-32.6-3.6-58.1-7.2l-1.1-108.2,3.2,1.1c0,43.5,17.3,75.2,52,95"/><path d="M1434.6,358.1c-17,14.1-33.7,22.7-50.1,25.7s-31.8,2.7-46.2-1.1c-14.3-3.7-25.9-11.7-34.7-23.9-8.8-12.2-13.3-27-13.3-44.3v-167.1h-34.5l77.5-95v64.2h109.8l-26.5,30.8h-83.3l-1.6,182.5c-.4,22.6,9.2,36.4,28.7,41.4,20.9,5.3,44.2-1.4,70-20.2,16.6-12.4,31.1-28.3,43.5-47.8h4.8c-12.4,22.3-27.1,40.5-44,54.7"/></svg>';
+
+    // Office names as shown to readers. Finest Head Office properties are being
+    // reassigned to Finest North East; until that's done in the register, show
+    // the new name. Data and colours still use the stored name.
+    var OFFICE_DISPLAY_NAMES = { 'finest head office': 'Finest North East' };
+    function displayOffice(name) {
+      var key = String(name || '').trim().toLowerCase();
+      return OFFICE_DISPLAY_NAMES[key] || name;
+    }
 
     function crEsc(text) {
       return escapeHtml(text).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
