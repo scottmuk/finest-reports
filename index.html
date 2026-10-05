@@ -2226,7 +2226,8 @@
       (r.editions || []).forEach(function(ed) {
         var office = msState.office, allOff = office === 'All offices';
         var fmt = function(n) { return Number(n || 0).toLocaleString('en-GB'); };
-        var ctr = ed.sent && ed.clicked ? (Math.round(ed.clicked / ed.sent * 1000) / 10) + '%' : '';
+        var pct = function(n) { return ed.sent && n ? (Math.round(n / ed.sent * 1000) / 10) + '%' : ''; };
+        var openRate = pct(ed.opened), ctr = pct(ed.clicked);
         var featured = ed.featured || [];
 
         html += '<section class="cr-section"><div class="cr-section-head"><div><h2 class="cr-h2">' + crEsc(ed.title) + '</h2>';
@@ -2242,12 +2243,15 @@
         var after = [];
         if (ed.visits) after.push('visiting our listings ' + fmt(ed.visits) + ' times');
         if (ed.homesBrowsed > 1) after.push('browsing ' + fmt(ed.homesBrowsed) + ' different homes');
-        if (ctr) sentence += ' ' + ctr + ' clicked through' + (after.length ? ', ' + after.join(' and ') : '') + '.';
+        if (openRate) sentence += ' ' + openRate + ' opened it';
+        if (ctr) sentence += (openRate ? ', and ' : ' ') + ctr + ' clicked through' + (after.length ? ', ' + after.join(' and ') : '');
+        if (openRate || ctr) sentence += '.';
         html += '<p class="ms-ed-sentence">' + crEsc(sentence) + '</p>';
 
         var tiles = [];
         if (ed.sent) tiles.push(['Subscribers reached', fmt(ed.sent), 'Received the newsletter']);
-        if (ctr) tiles.push(['Click-through rate', ctr, 'Of subscribers clicked through']);
+        if (openRate) tiles.push(['Open rate', openRate, 'Of subscribers opened it']);
+        else if (ctr) tiles.push(['Click-through rate', ctr, 'Of subscribers clicked through']);
         if (ed.visits) tiles.push(['Visits to our listings', fmt(ed.visits), 'From the newsletter']);
         if (featured.length) tiles.push(['Homes featured', fmt(featured.length), 'Finest and partner homes']);
         if (tiles.length) {
