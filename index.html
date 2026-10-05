@@ -497,6 +497,21 @@
     .ms-light-btn { align-self: flex-start; color: #0E2524 !important; border-color: #D9D3C9 !important; }
     .ms-act-row { display: grid; grid-template-columns: 140px 64px minmax(0, 1fr) minmax(0, 1.4fr) 70px; gap: 16px; align-items: center; padding: 13px 20px; }
     .ms-act-row + .ms-act-row { border-top: 1px solid #EEE8DF; }
+    .ms-place-pair { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 16px; margin-top: 20px; }
+    .ms-place { display: flex; flex-direction: column; gap: 4px; padding: 24px 26px; border-radius: 16px; background: #FFFFFF; border: 1px solid #E4DED4; }
+    .ms-place.lead { background: #002A29; border-color: #002A29; color: #FBF5EB; }
+    .ms-place-label { font-size: 12px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #5B6B69; }
+    .ms-place.lead .ms-place-label { color: #E7755C; }
+    .ms-place-value { font-family: 'the-seasons', 'Fraunces', Georgia, serif; font-weight: 300; font-size: 64px; line-height: 1.05; }
+    .ms-place-note { font-size: 13px; color: #5B6B69; }
+    .ms-place.lead .ms-place-note { color: #C9D6D4; }
+    .ms-place-line { margin-top: 16px; padding: 14px 18px; border-radius: 14px; background: #FFFFFF; border: 1px solid #E4DED4; font-size: 15px; color: #3E5250; }
+    .ms-place-line strong { color: #0E2524; }
+    .ms-place-bar { display: flex; height: 14px; border-radius: 7px; overflow: hidden; margin-top: 20px; background: #E6E0D6; }
+    .ms-place-bar span { display: block; height: 100%; }
+    .ms-place-key { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 10px; font-size: 13px; color: #3E5250; }
+    .ms-place-key i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+    @media (max-width: 720px) { .ms-place-pair { grid-template-columns: 1fr 1fr; gap: 10px; } .ms-place { padding: 18px; } .ms-place-value { font-size: 44px; } }
     .ms-press-cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-top: 20px; }
     .ms-press-visual { position: relative; aspect-ratio: 4 / 3; border-radius: 10px; overflow: hidden; background: #EDE7DD; }
     .ms-press-visual > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -2208,9 +2223,30 @@
         html += '</div></section>';
       }
 
-      // Where viewers are based
+      // Where viewers are based: London against the local market, as shares.
       var places = scope.places || {};
-      if ((places.cities && places.cities.length) || places.countryCount > 1) {
+      if (typeof places.london === 'number') {
+        var allOff = msState.office === 'All offices';
+        var localName = allOff ? 'Our local areas' : 'Local area';
+        html += '<section class="cr-section"><div><h2 class="cr-h2">Where viewers are based</h2>';
+        if (places.countryCount > 1) html += '<p class="cr-muted" style="margin:6px 0 0;">People in <strong>' + places.countryCount + ' countries</strong> looked at ' + (allOff ? 'our' : crEsc(displayOffice(msState.office))) + ' listings this month.</p>';
+        html += '</div><div class="ms-place-pair">';
+        html += '<div class="ms-place lead"><span class="ms-place-label">London buyers</span><span class="ms-place-value num">' + places.london + '%</span><span class="ms-place-note">of viewers</span></div>';
+        html += '<div class="ms-place"><span class="ms-place-label">' + localName + '</span><span class="ms-place-value num">' + places.local + '%</span><span class="ms-place-note">' + (places.localTowns ? crEsc(places.localTowns) + ' and nearby' : 'Around each of our offices') + '</span></div>';
+        html += '</div>';
+        var ratio = places.local ? places.london / places.local : 0;
+        var localPhrase = allOff ? 'our local areas' : 'the local area';
+        var line = !places.london ? '' :
+          ratio >= 3 ? 'Around ' + Math.floor(ratio) + ' times as many viewers came from London as from ' + localPhrase + '.' :
+          ratio >= 2 ? 'More than twice as many viewers came from London as from ' + localPhrase + '.' :
+          ratio > 1.1 || !places.local ? 'More viewers came from London than from ' + localPhrase + '.' :
+          places.london >= 10 ? 'London buyers make up ' + places.london + '% of viewers, alongside a strong local market.' : '';
+        if (line) html += '<div class="ms-place-line"><strong>' + crEsc(line) + '</strong> A useful point when a vendor asks why national marketing matters.</div>';
+        var parts = [['London', places.london, '#002A29'], [localName, places.local, '#E7755C'], ['Rest of the UK', places.uk, '#8FA9A6'], ['Overseas', places.overseas, '#D9CFBF']].filter(function(x) { return x[1] > 0; });
+        html += '<div class="ms-place-bar">' + parts.map(function(x) { return '<span style="width:' + x[1] + '%; background:' + x[2] + ';"></span>'; }).join('') + '</div>';
+        html += '<div class="ms-place-key">' + parts.map(function(x) { return '<span><i style="background:' + x[2] + ';"></i>' + crEsc(x[0]) + ' ' + x[1] + '%</span>'; }).join('') + '</div>';
+        html += '</section>';
+      } else if ((places.cities && places.cities.length) || places.countryCount > 1) {
         var placeCities = places.cities || [];
         var maxCity = Math.max.apply(null, placeCities.map(function(c) { return c.share || 0; }).concat([1]));
         html += '<section class="cr-section"><div><h2 class="cr-h2">Where viewers are based</h2>';
