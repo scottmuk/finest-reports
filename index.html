@@ -441,6 +441,18 @@
     .cr-platform.linkedin { background: #0A66C2; }
     .cr-platform.newsletter { background: #7A5E2E; }
     .cr-post-stats { display: flex; gap: 18px; flex-wrap: wrap; border-top: 1px solid #EEE8DF; padding-top: 10px; }
+    /* Social & newsletter posts as a compact list: same columns for every post. */
+    .cr-posts { background: #FFFFFF; border: 1px solid #E4DED4; border-radius: 16px; overflow: hidden; }
+    .cr-posts-head, .cr-post-row { display: grid; grid-template-columns: 116px 64px minmax(0, 1fr) 84px 100px 84px; gap: 16px; align-items: center; padding: 14px 20px; }
+    .cr-posts-head { padding-top: 12px; padding-bottom: 12px; background: #FBF9F5; border-bottom: 1px solid #EEE8DF; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #5B6B69; }
+    .cr-post-row + .cr-post-row { border-top: 1px solid #EEE8DF; }
+    .cr-post-row .cr-platform { justify-self: start; }
+    .cr-post-date { font-size: 13px; font-weight: 600; color: #5B6B69; }
+    .cr-post-text { font-size: 14px; font-weight: 600; color: #0E2524; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cr-post-fig { text-align: right; font-size: 15px; font-weight: 800; color: #0E2524; }
+    .cr-post-fig .cr-m-label { display: none; }
+    .cr-post-link { text-align: right; font-size: 13px; font-weight: 700; }
+    .cr-r { text-align: right; }
     .cr-post-stat { display: flex; flex-direction: column; }
     .cr-post-stat strong { font-size: 18px; font-weight: 800; color: #0E2524; }
     .cr-post-stat span { font-size: 11px; font-weight: 600; color: #5B6B69; }
@@ -473,6 +485,17 @@
       .cr-chart-box { height: 220px; padding: 12px 8px 8px; }
       .cr-press-img { flex-basis: 96px; width: 96px; height: 128px; }
       .cr-logo-svg { width: 108px; }
+      .cr-posts-head { display: none; }
+      .cr-post-row { grid-template-columns: auto auto 1fr; grid-template-areas: "plat date link" "text text text" "reach inter inter"; gap: 6px 12px; padding: 14px 16px; }
+      .cr-post-row .cr-platform { grid-area: plat; }
+      .cr-post-date { grid-area: date; }
+      .cr-post-link { grid-area: link; }
+      .cr-post-text { grid-area: text; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+      .cr-post-fig { text-align: left; font-size: 14px; }
+      .cr-post-fig.reach { grid-area: reach; }
+      .cr-post-fig.inter { grid-area: inter; }
+      .cr-post-fig .cr-m-label { display: inline; font-weight: 600; color: #5B6B69; }
+      .cr-post-fig.empty { display: none; }
       .cr-upcoming { padding: 22px; }
     }
 
@@ -1740,19 +1763,22 @@
         var posts = report.social.items;
         html += '<section class="cr-section"><div class="cr-section-head"><h2 class="cr-h2">Shared with our audience</h2>';
         if (report.social.reach) html += '<span class="cr-muted"><strong class="num">' + Number(report.social.reach).toLocaleString('en-GB') + '</strong> combined reach across ' + posts.length + (posts.length === 1 ? ' post' : ' posts') + '</span>';
-        html += '</div><div class="cr-grid social">';
+        html += '</div><div class="cr-posts">';
+        html += '<div class="cr-posts-head"><span>Platform</span><span>Date</span><span>Post</span><span class="cr-r">Reach</span><span class="cr-r">Interactions</span><span></span></div>';
         posts.forEach(function(s, idx) {
           var link = crSafeUrl(s.link);
-          html += '<article class="cr-card cr-post' + (idx >= 8 ? ' cr-hidden cr-more-post' : '') + '">';
-          html += '<div style="display:flex; justify-content:space-between; align-items:center; gap:8px;"><span class="cr-platform ' + crEsc(s.key || '') + '">' + crEsc(s.platform) + '</span><span class="num" style="font-size:12px; font-weight:600; color:#5B6B69;">' + crEsc(s.date || '') + '</span></div>';
-          if (s.text) html += '<span style="font-size:15px; font-weight:700; line-height:1.4; color:#0E2524;">' + crEsc(s.text) + '</span>';
-          if (s.stats && s.stats.length) {
-            html += '<div class="cr-post-stats">';
-            s.stats.forEach(function(st) { html += '<span class="cr-post-stat"><strong class="num">' + crEsc(st.value) + '</strong><span>' + crEsc(st.label) + '</span></span>'; });
-            html += '</div>';
-          }
-          if (link) html += '<a href="' + crEsc(link) + '" target="_blank" rel="noopener" style="font-size:13px; font-weight:700;">' + (s.key === 'newsletter' ? 'View newsletter' : 'View post') + '</a>';
-          html += '</article>';
+          var figs = crPostFigures(s);
+          var text = s.text || '';
+          if (s.key === 'newsletter' && figs.visits) text += (text ? ' · ' : '') + figs.visits + ' visits to your listing';
+          html += '<div class="cr-post-row' + (idx >= 8 ? ' cr-hidden cr-more-post' : '') + '">';
+          html += '<span class="cr-platform ' + crEsc(s.key || '') + '">' + crEsc(s.platform) + '</span>';
+          html += '<span class="cr-post-date num">' + crEsc(s.date || '') + '</span>';
+          // Long captions end in "…" (CSS ellipsis); the full caption shows on hover.
+          html += '<span class="cr-post-text" title="' + crEsc(text) + '">' + crEsc(text) + '</span>';
+          html += '<span class="cr-post-fig reach num' + (figs.reach ? '' : ' empty') + '">' + (figs.reach ? crEsc(figs.reach) + '<span class="cr-m-label"> reach</span>' : '–') + '</span>';
+          html += '<span class="cr-post-fig inter num' + (figs.inter ? '' : ' empty') + '">' + (figs.inter ? crEsc(figs.inter) + '<span class="cr-m-label"> interactions</span>' : '–') + '</span>';
+          html += link ? '<a class="cr-post-link" href="' + crEsc(link) + '" target="_blank" rel="noopener">View →</a>' : '<span></span>';
+          html += '</div>';
         });
         html += '</div>';
         if (posts.length > 8) html += '<button type="button" class="cr-btn" style="align-self:flex-start; color:#0E2524 !important; border-color:#D9D3C9;" onclick="crShowAllPosts(this)">Show all ' + posts.length + ' posts</button>';
@@ -1826,6 +1852,43 @@
         container.style.margin = '0';
       }
       if (report.chart && report.chart.trend && report.chart.trend.length) drawClientTrendChart(report.chart);
+    }
+
+    // Reach and interactions for a post. New links carry raw numbers
+    // (reachN / interN); links made before this change only carry the
+    // formatted stats, so those are read back from their labels.
+    function crStatNumber(value) {
+      var t = String(value || '').replace(/,/g, '').trim().toLowerCase();
+      var n = parseFloat(t);
+      if (isNaN(n)) return 0;
+      if (/k$/.test(t)) n *= 1000;
+      if (/m$/.test(t)) n *= 1000000;
+      return Math.round(n);
+    }
+
+    function crCompactNumber(n) {
+      n = Number(n) || 0;
+      if (n >= 1000000) return (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'm';
+      if (n >= 10000) return (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+      return Math.round(n).toLocaleString('en-GB');
+    }
+
+    function crPostFigures(post) {
+      var reach = Number(post.reachN) || 0;
+      var inter = Number(post.interN) || 0;
+      var visits = 0;
+      var reachText = '';
+      (post.stats || []).forEach(function(st) {
+        var label = String(st.label || '').toLowerCase();
+        if (label === 'reach' || (label === 'views' && !reachText)) reachText = st.value;
+        if (label.indexOf('visits') === 0) visits = crStatNumber(st.value);
+        if (!post.interN && /^(likes|reactions|saves|shares|comments)$/.test(label)) inter += crStatNumber(st.value);
+      });
+      return {
+        reach: reach ? crCompactNumber(reach) : (reachText || ''),
+        inter: inter ? crCompactNumber(inter) : '',
+        visits: visits ? crCompactNumber(visits) : ''
+      };
     }
 
     function crShowAllPosts(btn) {
