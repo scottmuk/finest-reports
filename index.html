@@ -2129,7 +2129,10 @@
         html += '<div class="ms-cards">';
         highlights.forEach(function(h) {
           var subject = 'Vendor report request: ' + h.property;
-          var body = 'Please could I have a vendor report for ' + h.property + ' (' + (r.title || '') + ')? Thank you.';
+          // The period is left for the negotiator to choose; since launch is the usual ask.
+          var body = 'Hi,\n\nPlease could I have a vendor report for ' + h.property + '?\n\n' +
+            'Period to cover: since launch\n(or from __/__/____ to __/__/____)\n\n' +
+            'Anything to leave out (optional):\n\nThank you';
           var mail = 'mailto:' + (r.requestEmail || 'marketing@finest.co.uk') + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
           html += '<article class="cr-card ms-card"><div class="ms-card-top"><span class="cr-eyebrow">' + crEsc(h.kind) + '</span>';
           if (h.office) html += '<span class="ms-tag">' + crEsc(displayOffice(h.office).replace(/^Finest /, '')) + '</span>';
