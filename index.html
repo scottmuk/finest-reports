@@ -572,10 +572,30 @@
         showReportExpired();
         return;
       }
-      fetch(REPORT_DATA_URL + '?format=json&token=' + encodeURIComponent(reportToken), { credentials: 'omit', redirect: 'follow' })
+      fetchReportData(1);
+    }
+
+    // Apps Script occasionally stalls (e.g. just after a new version is
+    // deployed), so a request that fails or takes over 20 seconds is tried
+    // up to three times before the client sees an error. An expired link is a normal
+    // answer, not a failure, and is never retried.
+    function fetchReportData(attempt) {
+      var controller = window.AbortController ? new AbortController() : null;
+      var timer = controller ? setTimeout(function() { controller.abort(); }, 20000) : null;
+      var options = { credentials: 'omit', redirect: 'follow' };
+      if (controller) options.signal = controller.signal;
+      fetch(REPORT_DATA_URL + '?format=json&token=' + encodeURIComponent(reportToken), options)
         .then(function(response) { return response.json(); })
-        .then(handleStoredReport)
+        .then(function(result) {
+          if (timer) clearTimeout(timer);
+          handleStoredReport(result);
+        })
         .catch(function() {
+          if (timer) clearTimeout(timer);
+          if (attempt < 3) {
+            setTimeout(function() { fetchReportData(attempt + 1); }, 1500);
+            return;
+          }
           showReportNotice('We couldn\u2019t load your report just now',
             'Please check your connection and try again in a moment.', true);
         });
