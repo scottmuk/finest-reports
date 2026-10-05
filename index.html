@@ -501,6 +501,8 @@
     .ms-press-visual { position: relative; aspect-ratio: 4 / 3; border-radius: 10px; overflow: hidden; background: #EDE7DD; }
     .ms-press-visual > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
     .ms-mast { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 18px; box-sizing: border-box; text-align: center; color: #0E2524; font-size: 18px; font-weight: 700; line-height: 1.2; }
+    .ms-press-badge { position: absolute; left: 12px; bottom: 12px; display: inline-flex; align-items: center; height: 30px; padding: 0 12px; border-radius: 8px; background: rgba(255, 255, 255, 0.94); color: #0E2524; font-size: 13px; font-weight: 800; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.18); }
+    .ms-press-badge img { height: 16px; width: auto; max-width: 150px; object-fit: contain; display: block; }
     .ms-mast-label { font-size: 11px; font-weight: 700; color: #5B6B69; }
     .ms-mast img { max-width: 78%; max-height: 38%; object-fit: contain; }
     .ms-press-meta { font-size: 12px; color: #5B6B69; margin-top: 10px; }
@@ -1773,6 +1775,10 @@
     // in the reports site's logos/ folder; add an entry as each logo is supplied.
     var PRESS_LOGO_BASE = 'https://reports.finest.co.uk/logos/';
     var PRESS_LOGOS = {};
+    function pressTopTitle(publication) {
+      var key = String(publication || '').toLowerCase().replace(/^the\s+/, '').replace(/[^a-z0-9]+/g, ' ').trim();
+      return /^(sunday times|times|guardian|country life)\b/.test(key) ? 1 : 0;
+    }
     function pressLogo(publication) {
       var key = String(publication || '').toLowerCase().replace(/^the\s+/, '').replace(/[^a-z0-9]+/g, ' ').trim();
       return PRESS_LOGOS[key] ? PRESS_LOGO_BASE + PRESS_LOGOS[key] : '';
@@ -2306,8 +2312,11 @@
         return { date: iss.date, link: iss.link, homes: homes };
       }).filter(function(iss) { return iss.homes.length; });
       if (press.length || issues.length) {
+        // The nationals and Country Life always lead; other titles fill any
+        // remaining cards. Within each group, the biggest lift in views first.
         var ranked = press.slice().sort(function(a, b) {
-          return ((b.lift || 0) - (a.lift || 0)) || (a.dateISO < b.dateISO ? 1 : a.dateISO > b.dateISO ? -1 : 0);
+          return (pressTopTitle(b.publication) - pressTopTitle(a.publication)) ||
+            ((b.lift || 0) - (a.lift || 0)) || (a.dateISO < b.dateISO ? 1 : a.dateISO > b.dateISO ? -1 : 0);
         });
         var cards = ranked.slice(0, 4);
         var rest = press.filter(function(p) { return cards.indexOf(p) === -1; });
@@ -2322,8 +2331,11 @@
             html += '<span class="ms-mast-label">Featured in</span>';
             html += logo ? '<img src="' + crEsc(logo) + '" alt="' + crEsc(p.publication) + '" onerror="this.replaceWith(document.createTextNode(this.alt))">' : '<span>' + crEsc(p.publication) + '</span>';
             html += '</div>';
-            if (img) html += '<img src="' + crEsc(img) + '" alt="" loading="lazy" onerror="this.remove()">';
-            html += '</div><div class="ms-press-meta">' + crEsc(p.publication + (p.date ? ' · ' + p.date : '')) + '</div>';
+            if (img) {
+              html += '<img src="' + crEsc(img) + '" alt="" loading="lazy" onerror="this.nextSibling && this.nextSibling.remove(); this.remove()">';
+              html += '<span class="ms-press-badge">' + (logo ? '<img src="' + crEsc(logo) + '" alt="' + crEsc(p.publication) + '" onerror="this.replaceWith(document.createTextNode(this.alt))">' : crEsc(p.publication)) + '</span>';
+            }
+            html += '</div><div class="ms-press-meta">' + crEsc((img ? '' : p.publication + (p.date ? ' · ' : '')) + (p.date || '')) + '</div>';
             html += '<div class="ms-press-name">' + crEsc(p.property) + '</div>';
             if (p.theme) html += '<div class="ms-press-theme">' + crEsc(p.theme) + '</div>';
             if (link) html += '<a href="' + crEsc(link) + '" target="_blank" rel="noopener">Read →</a>';
