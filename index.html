@@ -498,16 +498,17 @@
     .ms-act-row { display: grid; grid-template-columns: 140px 64px minmax(0, 1fr) minmax(0, 1.4fr) 70px; gap: 16px; align-items: center; padding: 13px 20px; }
     .ms-act-row + .ms-act-row { border-top: 1px solid #EEE8DF; }
     .ms-press-cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-top: 20px; }
-    .ms-press-visual { position: relative; aspect-ratio: 3 / 4; border-radius: 10px; overflow: hidden; background: #002A29; }
+    .ms-press-visual { position: relative; aspect-ratio: 4 / 3; border-radius: 10px; overflow: hidden; background: #EDE7DD; }
     .ms-press-visual > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
-    .ms-mast { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 18px; box-sizing: border-box; text-align: center; color: #F3EFE8; font-family: 'the-seasons', 'Fraunces', Georgia, serif; font-weight: 300; font-size: 24px; line-height: 1.15; }
-    .ms-mast img { max-width: 82%; max-height: 40%; object-fit: contain; filter: brightness(0) invert(1); }
+    .ms-mast { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 18px; box-sizing: border-box; text-align: center; color: #0E2524; font-size: 18px; font-weight: 700; line-height: 1.2; }
+    .ms-mast-label { font-size: 11px; font-weight: 700; color: #5B6B69; }
+    .ms-mast img { max-width: 78%; max-height: 38%; object-fit: contain; }
     .ms-press-meta { font-size: 12px; color: #5B6B69; margin-top: 10px; }
     .ms-press-name { font-size: 15px; font-weight: 700; margin-top: 2px; }
     .ms-press-theme { font-size: 13px; color: #3E5250; margin-top: 2px; line-height: 1.4; }
     .ms-press-card a { display: inline-block; margin-top: 6px; font-size: 13px; font-weight: 700; }
     .ms-sub-h { margin: 22px 0 8px; font-size: 13px; font-weight: 800; color: #5B6B69; }
-    @media (max-width: 720px) { .ms-press-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; } .ms-mast { font-size: 20px; } }
+    @media (max-width: 720px) { .ms-press-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; } .ms-mast { font-size: 15px; } }
     .ms-act-row .cr-platform { justify-self: start; }
     .ms-detail { font-weight: 500 !important; color: #3E5250 !important; }
     .ms-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
@@ -2318,7 +2319,8 @@
           cards.forEach(function(p) {
             var link = crSafeUrl(p.link), img = crSafeUrl(p.image), logo = pressLogo(p.publication);
             html += '<div class="ms-press-card"><div class="ms-press-visual"><div class="ms-mast">';
-            html += logo ? '<img src="' + crEsc(logo) + '" alt="' + crEsc(p.publication) + '" onerror="this.parentNode.textContent=this.alt">' : crEsc(p.publication);
+            html += '<span class="ms-mast-label">Featured in</span>';
+            html += logo ? '<img src="' + crEsc(logo) + '" alt="' + crEsc(p.publication) + '" onerror="this.replaceWith(document.createTextNode(this.alt))">' : '<span>' + crEsc(p.publication) + '</span>';
             html += '</div>';
             if (img) html += '<img src="' + crEsc(img) + '" alt="" loading="lazy" onerror="this.remove()">';
             html += '</div><div class="ms-press-meta">' + crEsc(p.publication + (p.date ? ' · ' + p.date : '')) + '</div>';
