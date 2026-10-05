@@ -454,6 +454,9 @@
     .cr-upcoming-item { border-top: 1px solid #2B5E5A; padding-top: 14px; display: flex; flex-direction: column; gap: 4px; }
     .cr-footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; font-size: 12px; color: #5B6B69; border-top: 1px solid #D9D3C9; padding-top: 22px; }
     .cr-hidden { display: none !important; }
+    .cr-notice { display: flex; flex-direction: column; gap: 16px; padding: 56px 0 64px; max-width: 640px; }
+    .cr-notice-title { font-size: 46px; }
+    @media (max-width: 720px) { .cr-notice { padding: 36px 0 44px; } .cr-notice-title { font-size: 34px; } }
 
     @media (max-width: 720px) {
       .cr-wrap { padding: 0 20px; }
@@ -543,20 +546,22 @@
         return;
       }
       if (!/^[A-Za-z0-9]{8,}$/.test(reportToken)) {
-        showError('This report link is invalid or has expired.');
+        showReportExpired();
         return;
       }
       fetch(REPORT_DATA_URL + '?format=json&token=' + encodeURIComponent(reportToken), { credentials: 'omit', redirect: 'follow' })
         .then(function(response) { return response.json(); })
         .then(handleStoredReport)
         .catch(function() {
-          showError('We couldn\'t load this report just now. Please try again in a moment.');
+          showReportNotice('We couldn\u2019t load your report just now',
+            'Please check your connection and try again in a moment.', true);
         });
     }
 
     function handleStoredReport(result) {
           if (!result || !result.success) {
-            showError((result && result.error) || 'Failed to load report');
+            // Expired, tidied away or mistyped: the client sees one friendly page.
+            showReportExpired();
             return;
           }
       var data = result.reportData || {};
@@ -1902,6 +1907,29 @@
       // Redraw at the page width when printing / saving as PDF.
       window.addEventListener('beforeprint', function() { crChart.resize(); });
       window.addEventListener('afterprint', function() { crChart.resize(); });
+    }
+
+    function showReportExpired() {
+      showReportNotice('This report has now expired',
+        'For your privacy, marketing reports are only available for a limited time. Please ask your Finest contact for an up-to-date report \u2013 it\u2019ll include the latest figures.', false);
+    }
+
+    function showReportNotice(title, message, offerRetry) {
+      document.body.classList.add('client-report');
+      document.title = 'Your marketing report \u00b7 Finest';
+      var html = '<div class="cr"><header class="cr-hero"><div class="cr-wrap">';
+      html += '<div class="cr-top"><div>' + CR_LOGO_SVG + '<div class="cr-logo-sub" style="margin-top:10px;">Your marketing report</div></div></div>';
+      html += '<div class="cr-notice"><h1 class="cr-title cr-notice-title">' + crEsc(title) + '</h1>';
+      html += '<p class="cr-headline">' + crEsc(message) + '</p>';
+      if (offerRetry) html += '<button type="button" class="cr-btn" onclick="window.location.reload()" style="align-self:flex-start;">Try again</button>';
+      html += '</div></div></header>';
+      html += '<main class="cr-wrap"><footer class="cr-footer" style="margin-top:32px;"><span>finest.co.uk</span></footer></main></div>';
+      var container = document.querySelector('.container');
+      (container || document.body).innerHTML = html;
+      if (container) {
+        container.style.maxWidth = 'none';
+        container.style.margin = '0';
+      }
     }
 
     function showError(message) {
