@@ -497,6 +497,17 @@
     .ms-light-btn { align-self: flex-start; color: #0E2524 !important; border-color: #D9D3C9 !important; }
     .ms-act-row { display: grid; grid-template-columns: 140px 64px minmax(0, 1fr) minmax(0, 1.4fr) 70px; gap: 16px; align-items: center; padding: 13px 20px; }
     .ms-act-row + .ms-act-row { border-top: 1px solid #EEE8DF; }
+    .ms-press-cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-top: 20px; }
+    .ms-press-visual { position: relative; aspect-ratio: 3 / 4; border-radius: 10px; overflow: hidden; background: #002A29; }
+    .ms-press-visual > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+    .ms-mast { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 18px; box-sizing: border-box; text-align: center; color: #F3EFE8; font-family: 'the-seasons', 'Fraunces', Georgia, serif; font-weight: 300; font-size: 24px; line-height: 1.15; }
+    .ms-mast img { max-width: 82%; max-height: 40%; object-fit: contain; filter: brightness(0) invert(1); }
+    .ms-press-meta { font-size: 12px; color: #5B6B69; margin-top: 10px; }
+    .ms-press-name { font-size: 15px; font-weight: 700; margin-top: 2px; }
+    .ms-press-theme { font-size: 13px; color: #3E5250; margin-top: 2px; line-height: 1.4; }
+    .ms-press-card a { display: inline-block; margin-top: 6px; font-size: 13px; font-weight: 700; }
+    .ms-sub-h { margin: 22px 0 8px; font-size: 13px; font-weight: 800; color: #5B6B69; }
+    @media (max-width: 720px) { .ms-press-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; } .ms-mast { font-size: 20px; } }
     .ms-act-row .cr-platform { justify-self: start; }
     .ms-detail { font-weight: 500 !important; color: #3E5250 !important; }
     .ms-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
@@ -1757,6 +1768,15 @@
     // reassigned to Finest North East; until that's done in the register, show
     // the new name. Data and colours still use the stored name.
     var OFFICE_DISPLAY_NAMES = { 'finest head office': 'Finest North East' };
+    // Publication mastheads for press cards without an article image. Files live
+    // in the reports site's logos/ folder; add an entry as each logo is supplied.
+    var PRESS_LOGO_BASE = 'https://reports.finest.co.uk/logos/';
+    var PRESS_LOGOS = {};
+    function pressLogo(publication) {
+      var key = String(publication || '').toLowerCase().replace(/^the\s+/, '').replace(/[^a-z0-9]+/g, ' ').trim();
+      return PRESS_LOGOS[key] ? PRESS_LOGO_BASE + PRESS_LOGOS[key] : '';
+    }
+
     function displayOffice(name) {
       var key = String(name || '').trim().toLowerCase();
       return OFFICE_DISPLAY_NAMES[key] || name;
@@ -2274,7 +2294,10 @@
         html += '</section>';
       });
 
-      // Press (and The Finest Edit rows when Brevo figures aren't available)
+      // Press: the features that gave their homes the biggest lift in views
+      // become cards (article image, else the publication's masthead), the
+      // rest follow in a compact list. Legacy Finest Edit rows join the list
+      // when Brevo figures aren't available.
       var press = (r.press || []).filter(function(p) { return msInOffice(p.office); });
       var editions = r.editions || [];
       var issues = (editions.length ? [] : (r.newsletter || [])).map(function(iss) {
@@ -2282,27 +2305,54 @@
         return { date: iss.date, link: iss.link, homes: homes };
       }).filter(function(iss) { return iss.homes.length; });
       if (press.length || issues.length) {
+        var ranked = press.slice().sort(function(a, b) {
+          return ((b.lift || 0) - (a.lift || 0)) || (a.dateISO < b.dateISO ? 1 : a.dateISO > b.dateISO ? -1 : 0);
+        });
+        var cards = ranked.slice(0, 4);
+        var rest = press.filter(function(p) { return cards.indexOf(p) === -1; });
         html += '<section class="cr-section"><div><h2 class="cr-h2">' + (issues.length ? 'Press and The Finest Edit' : 'Press') + '</h2>';
-        html += '<p class="cr-muted" style="margin:6px 0 0;">Finest properties only. Each item links to the ' + (issues.length ? 'article or newsletter' : 'article') + '.</p></div><div class="cr-posts">';
-        press.forEach(function(p) {
-          var link = crSafeUrl(p.link);
-          html += '<div class="ms-act-row">' + '<span class="cr-platform press">Press</span><span class="cr-post-date num">' + crEsc(p.date) + '</span>';
-          html += '<span class="cr-post-text" style="font-weight:700;">' + crEsc(p.property) + '</span>';
-          html += '<span class="cr-post-text ms-detail" title="' + crEsc(p.publication + (p.theme ? ' · ' + p.theme : '')) + '">' + crEsc(p.publication + (p.theme ? ' · ' + p.theme : '')) + '</span>';
-          html += link ? '<a class="cr-post-link" href="' + crEsc(link) + '" target="_blank" rel="noopener">View →</a>' : '<span></span>';
+        if (press.length) html += '<p class="cr-muted" style="margin:6px 0 0;">' + press.length + (press.length === 1 ? ' feature' : ' features') + ' in ' + crEsc(r.monthName || 'the month') + '. Each links to the article.</p>';
+        html += '</div>';
+        if (cards.length) {
+          html += '<div class="ms-press-cards">';
+          cards.forEach(function(p) {
+            var link = crSafeUrl(p.link), img = crSafeUrl(p.image), logo = pressLogo(p.publication);
+            html += '<div class="ms-press-card"><div class="ms-press-visual"><div class="ms-mast">';
+            html += logo ? '<img src="' + crEsc(logo) + '" alt="' + crEsc(p.publication) + '" onerror="this.parentNode.textContent=this.alt">' : crEsc(p.publication);
+            html += '</div>';
+            if (img) html += '<img src="' + crEsc(img) + '" alt="" loading="lazy" onerror="this.remove()">';
+            html += '</div><div class="ms-press-meta">' + crEsc(p.publication + (p.date ? ' · ' + p.date : '')) + '</div>';
+            html += '<div class="ms-press-name">' + crEsc(p.property) + '</div>';
+            if (p.theme) html += '<div class="ms-press-theme">' + crEsc(p.theme) + '</div>';
+            if (link) html += '<a href="' + crEsc(link) + '" target="_blank" rel="noopener">Read →</a>';
+            html += '</div>';
+          });
           html += '</div>';
-        });
-        issues.forEach(function(iss) {
-          var link = crSafeUrl(iss.link);
-          var names = iss.homes.map(function(h) { return h.name; }).join(', ');
-          var detail = (msState.office === 'All offices' && r.newsletterVisits ? Number(r.newsletterVisits).toLocaleString('en-GB') + ' visits to featured homes · ' : '') + names;
-          html += '<div class="ms-act-row"><span class="cr-platform newsletter">The Finest Edit</span><span class="cr-post-date num">' + crEsc(iss.date) + '</span>';
-          html += '<span class="cr-post-text" style="font-weight:700;">' + iss.homes.length + (iss.homes.length === 1 ? ' home featured' : ' homes featured') + '</span>';
-          html += '<span class="cr-post-text ms-detail" title="' + crEsc(detail) + '">' + crEsc(detail) + '</span>';
-          html += link ? '<a class="cr-post-link" href="' + crEsc(link) + '" target="_blank" rel="noopener">View →</a>' : '<span></span>';
+        }
+        if (rest.length || issues.length) {
+          if (cards.length) html += '<div class="ms-sub-h">Also featured</div>';
+          html += '<div class="cr-posts"' + (cards.length ? ' style="margin-top:0;"' : '') + '>';
+          rest.forEach(function(p) {
+            var link = crSafeUrl(p.link);
+            html += '<div class="ms-act-row">' + '<span class="cr-platform press">Press</span><span class="cr-post-date num">' + crEsc(p.date) + '</span>';
+            html += '<span class="cr-post-text" style="font-weight:700;">' + crEsc(p.property) + '</span>';
+            html += '<span class="cr-post-text ms-detail" title="' + crEsc(p.publication + (p.theme ? ' · ' + p.theme : '')) + '">' + crEsc(p.publication + (p.theme ? ' · ' + p.theme : '')) + '</span>';
+            html += link ? '<a class="cr-post-link" href="' + crEsc(link) + '" target="_blank" rel="noopener">Read →</a>' : '<span></span>';
+            html += '</div>';
+          });
+          issues.forEach(function(iss) {
+            var link = crSafeUrl(iss.link);
+            var names = iss.homes.map(function(h) { return h.name; }).join(', ');
+            var detail = (msState.office === 'All offices' && r.newsletterVisits ? Number(r.newsletterVisits).toLocaleString('en-GB') + ' visits to featured homes · ' : '') + names;
+            html += '<div class="ms-act-row"><span class="cr-platform newsletter">The Finest Edit</span><span class="cr-post-date num">' + crEsc(iss.date) + '</span>';
+            html += '<span class="cr-post-text" style="font-weight:700;">' + iss.homes.length + (iss.homes.length === 1 ? ' home featured' : ' homes featured') + '</span>';
+            html += '<span class="cr-post-text ms-detail" title="' + crEsc(detail) + '">' + crEsc(detail) + '</span>';
+            html += link ? '<a class="cr-post-link" href="' + crEsc(link) + '" target="_blank" rel="noopener">View →</a>' : '<span></span>';
+            html += '</div>';
+          });
           html += '</div>';
-        });
-        html += '</div></section>';
+        }
+        html += '</section>';
       }
 
       // Social media
