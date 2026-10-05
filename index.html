@@ -2160,6 +2160,24 @@
         html += '</div></section>';
       }
 
+      // Where viewers are based
+      var places = scope.places || {};
+      if ((places.cities && places.cities.length) || places.countryCount > 1) {
+        var placeCities = places.cities || [];
+        var maxCity = Math.max.apply(null, placeCities.map(function(c) { return c.share || 0; }).concat([1]));
+        html += '<section class="cr-section"><div><h2 class="cr-h2">Where viewers are based</h2>';
+        html += '<p class="cr-muted" style="margin:6px 0 0;">' + (places.countryCount > 1 ? 'People in <strong>' + places.countryCount + ' countries</strong> looked at ' + (msState.office === 'All offices' ? 'our' : crEsc(msState.office)) + ' listings this month.' : '') + (placeCities.length ? ' Share of all viewers by city:' : '') + '</p></div>';
+        if (placeCities.length) {
+          html += '<div class="cr-card" style="padding:22px 24px; display:flex; flex-direction:column; gap:14px;">';
+          placeCities.forEach(function(c) {
+            html += '<div class="cr-bar-row"><div class="cr-bar-top"><span style="font-weight:600;">' + crEsc(c.name) + '</span><span class="num" style="font-weight:700;">' + c.share + '%</span></div>';
+            html += '<div class="cr-bar"><div style="width:' + Math.round((c.share || 0) / maxCity * 100) + '%; background:#2F6461;"></div></div></div>';
+          });
+          html += '</div>';
+        }
+        html += '</section>';
+      }
+
       // Most-viewed properties
       var top = scope.top || [];
       if (top.length) {
