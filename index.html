@@ -505,8 +505,17 @@
     .ms-tile-big { font-family: 'the-seasons', 'Fraunces', Georgia, serif; font-weight: 300; font-size: 34px; line-height: 1; color: #0E2524; }
     .ms-tile-big small { font-family: 'Manrope', sans-serif; font-size: 14px; color: #5B6B69; }
     .ms-h3 { margin: 6px 0 0; font-size: 17px; font-weight: 800; color: #0E2524; }
-    .ms-ed-row { display: grid; grid-template-columns: 40px minmax(0, 1fr) 210px 110px; gap: 16px; align-items: center; padding: 12px 20px; }
-    .ms-ed-row + .ms-ed-row { border-top: 1px solid #EEE8DF; }
+    .ms-ed-row { display: grid; grid-template-columns: minmax(0, 1fr) 200px minmax(100px, 220px) 100px; gap: 16px; align-items: center; padding: 12px 20px; border-top: 1px solid #EEE8DF; }
+    .ms-ed-row.yours { background: #FBEFE9; }
+    .ms-ed-row .ms-prop-name { white-space: normal; }
+    .ms-ed-section { padding: 10px 20px; background: #FBF9F5; border-top: 1px solid #EEE8DF; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #5B6B69; }
+    .ms-ed-section:first-child { border-top: 0; }
+    .ms-ed-summary { margin: 6px 0 0; }
+    .ms-ed-summary strong { color: #0E2524; }
+    .ms-ed-office { padding: 12px 16px; border-radius: 12px; background: #FBEFE9; font-size: 14px; font-weight: 600; color: #0E2524; }
+    .ms-yours, .ms-req { display: inline-block; margin-left: 6px; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 10px; vertical-align: middle; }
+    .ms-yours { background: #E7755C; color: #002A29; }
+    .ms-req { background: #E3F1E8; color: #1F5E3B; }
     .ms-ed-unit { font-size: 12px; font-weight: 600; color: #5B6B69; }
     .ms-chips { display: flex; gap: 8px; flex-wrap: wrap; }
     .ms-chip { min-height: 36px; padding: 0 14px; border-radius: 18px; border: 1px solid #D9D3C9; background: transparent; color: #3E5250; font: 700 12px 'Manrope', system-ui, sans-serif; cursor: pointer; }
@@ -539,8 +548,10 @@
       .ms-act-row .cr-platform { grid-area: plat; } .ms-act-row .cr-post-date { grid-area: date; } .ms-act-row .cr-post-link { grid-area: link; }
       .ms-act-row .cr-post-text { grid-area: text; } .ms-act-row .ms-detail { grid-area: detail; white-space: normal; }
       .ms-offices { padding-bottom: 24px; }
-      .ms-ed-row { grid-template-columns: 24px 1fr auto; gap: 2px 10px; padding: 12px 16px; }
-      .ms-ed-row .ms-office-name { grid-column: 2; grid-row: 2; font-size: 12px; }
+      .ms-ed-row { grid-template-columns: 1fr auto; gap: 4px 10px; padding: 12px 16px; }
+      .ms-ed-row .ms-office-name { grid-column: 1; grid-row: 2; font-size: 12px; }
+      .ms-ed-row .cr-bar { display: none; }
+      .ms-ed-row .cr-post-fig { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
       .cr-posts-head { display: none; }
       .cr-post-row { grid-template-columns: auto auto 1fr; grid-template-areas: "plat date link" "text text text" "reach inter inter"; gap: 6px 12px; padding: 14px 16px; }
       .cr-post-row .cr-platform { grid-area: plat; }
@@ -2205,35 +2216,55 @@
         html += '</section>';
       }
 
-      // The Finest Edit (Brevo statistics + visits from the issue's links)
+      // The Finest Edit: network-wide (Finest and partner homes), never filtered
+      // to nothing; the selected office's homes are highlighted.
       (r.editions || []).forEach(function(ed) {
-        var homes = (ed.homes || []).filter(function(h) { return msInOffice(h.office); });
-        var pct = function(n) { return ed.sent ? Math.round(n / ed.sent * 100) : 0; };
+        var office = msState.office, allOff = office === 'All offices';
+        var allHomes = [];
+        (ed.sections || []).forEach(function(sec) { allHomes = allHomes.concat(sec.homes); });
+        var maxClicks = Math.max.apply(null, allHomes.map(function(h) { return h.clicks || 0; }).concat([1]));
         html += '<section class="cr-section"><div class="cr-section-head"><div><h2 class="cr-h2">' + crEsc(ed.title) + '</h2>';
-        html += '<p class="cr-muted" style="margin:6px 0 0;">' + (ed.date ? 'Sent ' + crEsc(ed.date) + ' · ' : '') + 'our monthly newsletter</p></div>';
-        if (crSafeUrl(ed.link)) html += '<a href="' + crEsc(crSafeUrl(ed.link)) + '" target="_blank" rel="noopener" style="font-size:14px; font-weight:700;">View the issue →</a>';
-        html += '</div><div class="cr-kpis">';
-        var tiles = [
-          ['Sent to', Number(ed.sent || 0).toLocaleString('en-GB'), 'Subscribers'],
-          ['Clicked', Number(ed.clicked || 0).toLocaleString('en-GB'), pct(ed.clicked) + '% of readers'],
-          ['Visits to our listings', Number(ed.visits || 0).toLocaleString('en-GB'), 'From links in this issue'],
-          ['Opened', Number(ed.opened || 0).toLocaleString('en-GB'), pct(ed.opened) + '% · approximate']
-        ];
-        tiles.forEach(function(t) {
-          html += '<div class="cr-kpi"><span class="cr-kpi-label">' + crEsc(t[0]) + '</span><span class="cr-kpi-value num">' + crEsc(t[1]) + '</span><span class="cr-kpi-note">' + crEsc(t[2]) + '</span></div>';
+        var bits = [];
+        if (ed.date) bits.push('Sent ' + crEsc(ed.date));
+        if (ed.sent) bits.push('to ' + Number(ed.sent).toLocaleString('en-GB') + ' subscribers');
+        var line = bits.join(' ');
+        var figs = [];
+        if (ed.clicked) figs.push('<strong>' + Number(ed.clicked).toLocaleString('en-GB') + ' readers clicked</strong>');
+        if (ed.visits) figs.push('<strong>' + Number(ed.visits).toLocaleString('en-GB') + ' visits to our listings</strong>');
+        if (ed.requests) figs.push('<strong>' + ed.requests + (ed.requests === 1 ? ' viewing request' : ' viewing requests') + '</strong>');
+        html += '<p class="cr-muted ms-ed-summary">' + line + (figs.length ? ' · ' + figs.join(' · ') : '') + '</p></div>';
+        if (crSafeUrl(ed.link)) html += '<a href="' + crEsc(crSafeUrl(ed.link)) + '" target="_blank" rel="noopener" style="font-size:14px; font-weight:700; white-space:nowrap;">View the newsletter →</a>';
+        html += '</div>';
+
+        if (!allOff) {
+          var mine = allHomes.filter(function(h) { return h.office === office; });
+          var name = displayOffice(office).replace(/^Finest /, '');
+          if (mine.length) {
+            var mc = mine.reduce(function(s, h) { return s + (h.clicks || 0); }, 0);
+            var mr = mine.reduce(function(s, h) { return s + (h.requests || 0); }, 0);
+            html += '<div class="ms-ed-office">' + mine.length + ' ' + crEsc(name) + (mine.length === 1 ? ' home' : ' homes') + ' featured · ' + mc.toLocaleString('en-GB') + ' clicks' + (mr ? ' · ' + mr + (mr === 1 ? ' viewing request' : ' viewing requests') : '') + '</div>';
+          } else {
+            var next = new Date(r.year, r.month, 1);
+            var nextName = next.toLocaleString('en-GB', { month: 'long' });
+            html += '<div class="ms-ed-office">No ' + crEsc(name) + ' homes in this issue. The ' + nextName + ' issue goes out in the first week of ' + nextName + '; ask marketing if you’d like a home featured.</div>';
+          }
+        }
+
+        html += '<div class="cr-posts">';
+        (ed.sections || []).forEach(function(sec) {
+          html += '<div class="ms-ed-section">' + crEsc(sec.name) + '</div>';
+          sec.homes.forEach(function(h) {
+            var yours = !allOff && h.office === office;
+            var who = h.partner ? 'Partner: ' + (h.agent || 'agent') : displayOffice(h.office || 'Finest');
+            html += '<div class="ms-ed-row' + (yours ? ' yours' : '') + '">';
+            html += '<span class="ms-prop-name">' + crEsc(h.name) + (yours ? ' <span class="ms-yours">Your office</span>' : '') + (h.requests ? ' <span class="ms-req">' + h.requests + (h.requests === 1 ? ' viewing request' : ' viewing requests') + '</span>' : '') + '</span>';
+            html += '<span class="ms-office-name' + (h.partner ? ' partner' : '') + '">' + crEsc(who) + '</span>';
+            html += '<span class="cr-bar"><span style="display:block; height:8px; border-radius:4px; width:' + Math.round((h.clicks || 0) / maxClicks * 100) + '%; background:#7A5E2E;"></span></span>';
+            html += '<span class="cr-post-fig num">' + Number(h.clicks || 0).toLocaleString('en-GB') + '<span class="ms-ed-unit"> clicks</span></span></div>';
+          });
         });
         html += '</div>';
-        if (homes.length) {
-          html += '<h3 class="ms-h3">Most-clicked homes' + (msState.office === 'All offices' ? '' : ' · ' + crEsc(displayOffice(msState.office))) + '</h3><div class="cr-posts">';
-          homes.slice(0, 8).forEach(function(h, i) {
-            html += '<div class="ms-ed-row"><span class="num ms-rank' + (i < 3 ? ' lead' : '') + '">' + (i + 1) + '</span><span class="ms-prop-name">' + crEsc(h.name) + '</span>';
-            html += '<span class="ms-office-name">' + crEsc(displayOffice(h.office || '')) + '</span><span class="cr-post-fig num">' + Number(h.clicks || 0).toLocaleString('en-GB') + '<span class="ms-ed-unit"> clicks</span></span></div>';
-          });
-          html += '</div>';
-        } else if (msState.office !== 'All offices') {
-          html += '<p class="cr-muted" style="margin:0;">No ' + crEsc(displayOffice(msState.office)) + ' homes were featured in this issue.</p>';
-        }
-        html += '<p class="cr-muted" style="margin:0; font-size:12px;">Opens are approximate: some email apps (e.g. Apple Mail) open emails automatically. Clicks and visits are the reliable measures.</p>';
+        if (ed.requests) html += '<p class="cr-muted" style="margin:0; font-size:12px;">Viewing requests: enquiry forms sent during a visit that started from the newsletter. A guide rather than an exact count: people who come back later to enquire aren’t included.</p>';
         html += '</section>';
       });
 
