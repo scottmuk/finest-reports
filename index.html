@@ -511,6 +511,7 @@
     .ms-ed-section { padding: 10px 20px; background: #FBF9F5; border-top: 1px solid #EEE8DF; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #5B6B69; }
     .ms-ed-section:first-child { border-top: 0; }
     .ms-ed-summary { margin: 6px 0 0; }
+    .ms-ed-sentence { margin: 0; font-size: 17px; line-height: 1.6; color: #3E5250; max-width: 46em; }
     .ms-ed-summary strong { color: #0E2524; }
     .ms-ed-office { padding: 12px 16px; border-radius: 12px; background: #FBEFE9; font-size: 14px; font-weight: 600; color: #0E2524; }
     .ms-link-row { display: grid; grid-template-columns: 130px minmax(0, 1fr) 100px; gap: 16px; align-items: center; padding: 12px 20px; }
@@ -2235,14 +2236,19 @@
         html += '<section class="cr-section"><div class="cr-section-head"><div><h2 class="cr-h2">' + crEsc(ed.title) + '</h2>';
         var sub = [];
         if (ed.edition) sub.push('Edition ' + ed.edition);
-        if (ed.date) sub.push('sent ' + crEsc(ed.date) + (ed.sent ? ' to ' + fmt(ed.sent) + ' subscribers' : ''));
+        if (ed.date) sub.push('sent ' + crEsc(ed.date));
         html += '<p class="cr-muted ms-ed-summary">' + sub.join(' · ') + '</p></div>';
         if (crSafeUrl(ed.link)) html += '<a href="' + crEsc(crSafeUrl(ed.link)) + '" target="_blank" rel="noopener" style="font-size:14px; font-weight:700; white-space:nowrap;">View the newsletter →</a>';
         html += '</div>';
 
+        // Brand reach and engagement, kept to a few plain figures.
+        var monthWord = String(ed.title || '').replace(/^The Finest Edit · /, '').split(' ')[0];
+        var sentence = 'Our ' + (monthWord || '') + ' issue reached ' + fmt(ed.sent) + ' subscribers.';
+        if (ed.clicked) sentence += ' ' + fmt(ed.clicked) + ' readers clicked through' + (ed.visits ? ', and they visited our listings ' + fmt(ed.visits) + ' times.' : '.');
+        html += '<p class="ms-ed-sentence">' + crEsc(sentence) + '</p>';
         var tiles = [];
-        if (ed.clicked) tiles.push(['Readers who clicked', fmt(ed.clicked), ed.sent ? Math.round(ed.clicked / ed.sent * 100) + '% of subscribers' : '']);
-        if (ed.totalClicks) tiles.push(['Clicks in the email', fmt(ed.totalClicks), 'On homes, collections and articles']);
+        if (ed.sent) tiles.push(['Subscribers reached', fmt(ed.sent), 'Received the newsletter']);
+        if (ed.clicked) tiles.push(['Readers who clicked through', fmt(ed.clicked), ed.sent ? (Math.round(ed.clicked / ed.sent * 1000) / 10) + '% of subscribers' : '']);
         if (ed.visits) tiles.push(['Visits to our listings', fmt(ed.visits), 'From the newsletter']);
         if (ed.requests) tiles.push(['Viewing requests', fmt(ed.requests), 'Sent after reading the newsletter']);
         if (tiles.length) {
@@ -2286,14 +2292,6 @@
         }
         if (ed.otherListings) html += '<p class="cr-muted" style="margin:0;">Readers also went on to browse <strong style="color:#0E2524;">' + ed.otherListings + ' other listings</strong> during those visits.</p>';
 
-        if ((ed.links || []).length) {
-          html += '<h3 class="ms-h3">Most-clicked in the email</h3><div class="cr-posts">';
-          ed.links.forEach(function(l) {
-            html += '<div class="ms-link-row"><span class="ms-link-kind">' + crEsc(l.kind) + '</span><span class="ms-prop-name">' + crEsc(l.label) + '</span>';
-            html += '<span class="cr-post-fig num">' + fmt(l.clicks) + '<span class="ms-ed-unit"> clicks</span></span></div>';
-          });
-          html += '</div>';
-        }
         html += '<p class="cr-muted" style="margin:0; font-size:12px;">Views from the newsletter include homes reached through a collection or article, not just direct clicks.' +
           (ed.requests ? ' Viewing requests are enquiry forms sent during those visits: a guide rather than an exact count.' : '') + '</p>';
         html += '</section>';
