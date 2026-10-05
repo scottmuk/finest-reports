@@ -480,7 +480,6 @@
     .ms-tag { font-size: 11px; font-weight: 700; color: #5B6B69; background: #F1ECE4; padding: 3px 8px; border-radius: 10px; }
     .ms-card-line { font-size: 14px; line-height: 1.5; color: #3E5250; }
     .ms-card-link { margin-top: 4px; font-size: 13px; font-weight: 700; }
-    .ms-card-alt { font-size: 12px; color: #5B6B69 !important; }
     .ms-top-head, .ms-top-row { display: grid; grid-template-columns: 40px minmax(0, 1fr) 210px 90px 140px; gap: 16px; align-items: center; padding: 12px 20px; }
     .ms-top-head { background: #FBF9F5; border-bottom: 1px solid #EEE8DF; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #5B6B69; }
     .ms-top-row + .ms-top-row { border-top: 1px solid #EEE8DF; }
@@ -2132,18 +2131,16 @@
           var subject = 'Vendor report request: ' + h.property;
           // The period is left for the negotiator to choose; since launch is the usual ask.
           var body = 'Hi,\n\nPlease could I have a vendor report for ' + h.property + '?\n\n' +
-            'Period to cover: since launch\n(or from __/__/____ to __/__/____)\n\n' +
-            'Anything to leave out (optional):\n\nThank you';
+            'Period to cover: since launch\n(or from __/__/____ to __/__/____)\n\nThank you';
           var to = r.requestEmail || 'marketing@finest.co.uk';
-          // Finest uses Outlook on the web (Microsoft 365); mailto stays as a fallback.
+          // Finest uses Outlook on the web (Microsoft 365).
           var outlook = 'https://outlook.office.com/mail/deeplink/compose?to=' + encodeURIComponent(to) + '&subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
-          var mail = 'mailto:' + to + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
           html += '<article class="cr-card ms-card"><div class="ms-card-top"><span class="cr-eyebrow">' + crEsc(h.kind) + '</span>';
           if (h.office) html += '<span class="ms-tag">' + crEsc(displayOffice(h.office).replace(/^Finest /, '')) + '</span>';
           html += '</div><span class="cr-press-title">' + crEsc(h.property) + '</span>';
           html += '<span class="ms-card-line">' + crEsc(h.line) + '</span>';
           html += '<a class="ms-card-link" href="' + crEsc(outlook) + '" target="_blank" rel="noopener">Request vendor report →</a>';
-          html += '<a class="ms-card-alt" href="' + crEsc(mail) + '">or use your email app</a></article>';
+          html += '</article>';
         });
         html += '</div></section>';
       }
