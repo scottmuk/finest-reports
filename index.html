@@ -489,14 +489,14 @@
     <div class="header">
       <div class="logo">FINEST</div>
       <div class="logo-sub"></div>
-      <h1 class="report-title" id="reportTitle">Loading report...</h1>
-      <p class="report-subtitle" id="reportSubtitle">Preparing snapshot</p>
+      <h1 class="report-title" id="reportTitle">Your marketing report</h1>
+      <p class="report-subtitle" id="reportSubtitle">Preparing your report</p>
     </div>
 
     <div id="content">
       <div class="loading">
         <div class="loading-spinner"></div>
-        <p>Loading report data...</p>
+        <p id="loadingMessage">Loading your report…</p>
       </div>
     </div>
 
@@ -520,6 +520,16 @@
 
     document.addEventListener('DOMContentLoaded', function() {
       loadStoredReport();
+      // Apps Script can take several seconds to respond; reassure rather than
+      // leave a bare spinner. (The element is replaced once the report loads.)
+      setTimeout(function() {
+        var msg = document.getElementById('loadingMessage');
+        if (msg) msg.textContent = 'Gathering the latest figures for your report. This can take a few seconds…';
+      }, 4000);
+      setTimeout(function() {
+        var msg = document.getElementById('loadingMessage');
+        if (msg) msg.textContent = 'Nearly there. Thanks for your patience…';
+      }, 12000);
     });
 
     function loadStoredReport() {
