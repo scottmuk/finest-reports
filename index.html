@@ -468,6 +468,47 @@
     .cr-upcoming-item { border-top: 1px solid #2B5E5A; padding-top: 14px; display: flex; flex-direction: column; gap: 4px; }
     .cr-footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; font-size: 12px; color: #5B6B69; border-top: 1px solid #D9D3C9; padding-top: 22px; }
     .cr-hidden { display: none !important; }
+    /* ===== Monthly report for sales staff ===== */
+    .cr-platform.press { background: #B8462C; }
+    .ms-offices { display: flex; gap: 8px; flex-wrap: wrap; padding-bottom: 36px; }
+    .ms-office { min-height: 40px; padding: 0 16px; border-radius: 20px; border: 1px solid #2B5E5A; background: transparent; color: #D7DED9; font: 700 13px 'Manrope', system-ui, sans-serif; cursor: pointer; }
+    .ms-office:hover { background: rgba(255,255,255,0.06); }
+    .ms-office.on { background: #E7755C; border-color: #E7755C; color: #002A29; }
+    .ms-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+    .ms-card { padding: 20px; display: flex; flex-direction: column; gap: 8px; }
+    .ms-card-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .ms-tag { font-size: 11px; font-weight: 700; color: #5B6B69; background: #F1ECE4; padding: 3px 8px; border-radius: 10px; }
+    .ms-card-line { font-size: 14px; line-height: 1.5; color: #3E5250; }
+    .ms-card-link { margin-top: 4px; font-size: 13px; font-weight: 700; }
+    .ms-top-head, .ms-top-row { display: grid; grid-template-columns: 40px minmax(0, 1fr) 210px 90px 140px; gap: 16px; align-items: center; padding: 12px 20px; }
+    .ms-top-head { background: #FBF9F5; border-bottom: 1px solid #EEE8DF; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #5B6B69; }
+    .ms-top-row + .ms-top-row { border-top: 1px solid #EEE8DF; }
+    .ms-rank { font-size: 13px; font-weight: 800; color: #8A9796; }
+    .ms-rank.lead { color: #B8462C; }
+    .ms-prop { display: flex; flex-direction: column; min-width: 0; }
+    .ms-prop-name { font-size: 14px; font-weight: 700; color: #0E2524 !important; text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    a.ms-prop-name:hover { text-decoration: underline; }
+    .ms-prop-status { font-size: 12px; color: #5B6B69; }
+    .ms-office-name { font-size: 13px; font-weight: 600; color: #0E2524; }
+    .ms-office-name.partner { color: #5B6B69; font-weight: 500; }
+    .ms-change { text-align: right; font-size: 13px; font-weight: 700; color: #1F7A52; }
+    .ms-change.down { color: #5B6B69; }
+    .ms-change.new { color: #2F6461; }
+    .ms-light-btn { align-self: flex-start; color: #0E2524 !important; border-color: #D9D3C9 !important; }
+    .ms-act-row { display: grid; grid-template-columns: 140px 64px minmax(0, 1fr) minmax(0, 1.4fr) 70px; gap: 16px; align-items: center; padding: 13px 20px; }
+    .ms-act-row + .ms-act-row { border-top: 1px solid #EEE8DF; }
+    .ms-act-row .cr-platform { justify-self: start; }
+    .ms-detail { font-weight: 500 !important; color: #3E5250 !important; }
+    .ms-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+    .ms-tile { padding: 16px 18px; display: flex; flex-direction: column; gap: 8px; }
+    .ms-tile .cr-platform { align-self: flex-start; }
+    .ms-tile-big { font-family: 'the-seasons', 'Fraunces', Georgia, serif; font-weight: 300; font-size: 34px; line-height: 1; color: #0E2524; }
+    .ms-tile-big small { font-family: 'Manrope', sans-serif; font-size: 14px; color: #5B6B69; }
+    .ms-h3 { margin: 6px 0 0; font-size: 17px; font-weight: 800; color: #0E2524; }
+    .ms-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+    .ms-chip { min-height: 36px; padding: 0 14px; border-radius: 18px; border: 1px solid #D9D3C9; background: transparent; color: #3E5250; font: 700 12px 'Manrope', system-ui, sans-serif; cursor: pointer; }
+    .ms-chip.on { background: #0E2524; border-color: #0E2524; color: #F6F3EE; }
+
     .cr-notice { display: flex; flex-direction: column; gap: 16px; padding: 56px 0 64px; max-width: 640px; }
     .cr-notice-title { font-size: 46px; }
     @media (max-width: 720px) { .cr-notice { padding: 36px 0 44px; } .cr-notice-title { font-size: 34px; } }
@@ -487,6 +528,14 @@
       .cr-chart-box { height: 220px; padding: 12px 8px 8px; }
       .cr-press-img { flex-basis: 96px; width: 96px; height: 128px; }
       .cr-logo-svg { width: 108px; }
+      .ms-top-head { display: none; }
+      .ms-top-row { grid-template-columns: 28px 1fr auto; grid-template-areas: "rank prop views" ". office change"; gap: 2px 10px; padding: 12px 16px; }
+      .ms-rank { grid-area: rank; } .ms-prop { grid-area: prop; } .ms-top-row .cr-post-fig { grid-area: views; text-align: right; }
+      .ms-office-name { grid-area: office; font-size: 12px; } .ms-change { grid-area: change; font-size: 12px; }
+      .ms-act-row { grid-template-columns: auto 1fr auto; grid-template-areas: "plat date link" "text text text" "detail detail detail"; gap: 4px 12px; padding: 14px 16px; }
+      .ms-act-row .cr-platform { grid-area: plat; } .ms-act-row .cr-post-date { grid-area: date; } .ms-act-row .cr-post-link { grid-area: link; }
+      .ms-act-row .cr-post-text { grid-area: text; } .ms-act-row .ms-detail { grid-area: detail; white-space: normal; }
+      .ms-offices { padding-bottom: 24px; }
       .cr-posts-head { display: none; }
       .cr-post-row { grid-template-columns: auto auto 1fr; grid-template-areas: "plat date link" "text text text" "reach inter inter"; gap: 6px 12px; padding: 14px 16px; }
       .cr-post-row .cr-platform { grid-area: plat; }
@@ -561,6 +610,11 @@
     });
 
     function loadStoredReport() {
+      // Preview inside the staff app: the report is passed in directly.
+      if (window.PREVIEW_REPORT) {
+        handleStoredReport({ success: true, reportData: window.PREVIEW_REPORT });
+        return;
+      }
       if (window.google && google.script && google.script.run) {
         google.script.run
           .withSuccessHandler(handleStoredReport)
@@ -611,7 +665,9 @@
           }
       var data = result.reportData || {};
           if (data.agentColors) shareAgentColors = data.agentColors;
-          if (data.reportType === 'clientReport') {
+          if (data.reportType === 'monthlyStaff') {
+            displayMonthlyStaffReport(data);
+          } else if (data.reportType === 'clientReport') {
             displayClientReport(data, result);
           } else if (data.reportType === 'propertyStory') {
             displayPropertyStoryReport(data, result);
@@ -2001,6 +2057,212 @@
       // Redraw at the page width when printing / saving as PDF.
       window.addEventListener('beforeprint', function() { crChart.resize(); });
       window.addEventListener('afterprint', function() { crChart.resize(); });
+    }
+
+    // ===== Monthly marketing report for sales staff (reportType 'monthlyStaff') =====
+    var msReport = null;
+    var msState = { office: 'All offices', social: 'All', showAll: false, shown: 10 };
+
+    function displayMonthlyStaffReport(report) {
+      msReport = report;
+      msState = { office: 'All offices', social: 'All', showAll: false, shown: 10 };
+      document.body.classList.add('client-report');
+      document.title = 'Monthly marketing report · ' + (report.title || '') + ' · Finest';
+      var container = document.querySelector('.container');
+      if (container) {
+        container.style.maxWidth = 'none';
+        container.style.margin = '0';
+      }
+      msRender();
+    }
+
+    function msScope() {
+      var scopes = msReport.scopes || [];
+      for (var i = 0; i < scopes.length; i++) if (scopes[i].office === msState.office) return scopes[i];
+      return scopes[0] || {};
+    }
+
+    function msInOffice(office) {
+      return msState.office === 'All offices' || office === msState.office;
+    }
+
+    function msSetOffice(office) { msState.office = office; msState.social = 'All'; msState.shown = 10; msRender(); }
+    function msSetSocial(platform) { msState.social = platform; msState.shown = 10; msRender(); }
+    function msToggleAll() { msState.showAll = !msState.showAll; msState.shown = 10; msRender(); }
+    function msMore() { msState.shown += 10; msRender(); }
+
+    function msBadge(key, label) {
+      return '<span class="cr-platform ' + crEsc(key || '') + '">' + crEsc(label) + '</span>';
+    }
+
+    function msRender() {
+      var r = msReport, scope = msScope();
+      var scrollY = window.scrollY;
+      var html = '<div class="cr">';
+
+      html += '<header class="cr-hero"><div class="cr-wrap">';
+      html += '<div class="cr-top"><div>' + CR_LOGO_SVG + '<div class="cr-logo-sub" style="margin-top:10px;">Monthly marketing report · for Finest sales teams</div></div>';
+      html += '<div class="cr-actions"><button type="button" class="cr-btn" onclick="window.print()">Save as PDF</button></div></div>';
+      html += '<div class="cr-notice" style="padding:40px 0 20px; max-width:760px;"><h1 class="cr-title">' + crEsc(r.title || '') + '</h1>';
+      html += '<p class="cr-headline">' + crEsc(scope.summary || '') + '</p></div>';
+      html += '<div class="ms-offices" role="group" aria-label="Office">';
+      ['All offices'].concat(r.offices || []).forEach(function(o) {
+        html += '<button type="button" class="ms-office' + (o === msState.office ? ' on' : '') + '" onclick="msSetOffice(' + crEsc(JSON.stringify(o)) + ')">' + crEsc(o) + '</button>';
+      });
+      html += '</div></div></header>';
+
+      html += '<main class="cr-wrap cr-main">';
+
+      // The month at a glance
+      html += '<section class="cr-section"><h2 class="cr-h2">The month at a glance</h2><div class="cr-kpis">';
+      (scope.kpis || []).forEach(function(k) {
+        html += '<div class="cr-kpi"><span class="cr-kpi-label">' + crEsc(k.label) + '</span><span class="cr-kpi-value num">' + crEsc(k.value) + '</span>';
+        html += '<span class="cr-kpi-note"' + (k.up ? ' style="color:#1F7A52;"' : '') + '>' + crEsc(k.note || '') + '</span></div>';
+      });
+      html += '</div></section>';
+
+      // Good news to share
+      var highlights = scope.highlights || [];
+      if (highlights.length) {
+        html += '<section class="cr-section"><div><h2 class="cr-h2">Good news to share with vendors</h2>';
+        html += '<p class="cr-muted" style="margin:6px 0 0;">Picked automatically each month. Request a vendor report and marketing will send you the full picture for that home.</p></div>';
+        html += '<div class="ms-cards">';
+        highlights.forEach(function(h) {
+          var subject = 'Vendor report request: ' + h.property;
+          var body = 'Please could I have a vendor report for ' + h.property + ' (' + (r.title || '') + ')? Thank you.';
+          var mail = 'mailto:' + (r.requestEmail || 'marketing@finest.co.uk') + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+          html += '<article class="cr-card ms-card"><div class="ms-card-top"><span class="cr-eyebrow">' + crEsc(h.kind) + '</span>';
+          if (h.office) html += '<span class="ms-tag">' + crEsc(displayOffice(h.office).replace(/^Finest /, '')) + '</span>';
+          html += '</div><span class="cr-press-title">' + crEsc(h.property) + '</span>';
+          html += '<span class="ms-card-line">' + crEsc(h.line) + '</span>';
+          html += '<a class="ms-card-link" href="' + crEsc(mail) + '">Request vendor report →</a></article>';
+        });
+        html += '</div></section>';
+      }
+
+      // Most-viewed properties
+      var top = scope.top || [];
+      if (top.length) {
+        var allOffices = msState.office === 'All offices';
+        html += '<section class="cr-section"><div class="cr-section-head"><h2 class="cr-h2">Most-viewed properties</h2>';
+        html += '<span class="cr-muted">' + (allOffices ? 'Live listings · Finest and partners · top ' + top.length : crEsc(msState.office) + ' · live listings') + '</span></div>';
+        html += '<div class="cr-posts"><div class="ms-top-head"><span>#</span><span>Property</span><span>Office</span><span class="cr-r">Views</span><span class="cr-r">On ' + crEsc(r.prevMonthName || 'last month') + '</span></div>';
+        top.forEach(function(t, i) {
+          var url = crSafeUrl(t.url);
+          var down = /^▼/.test(t.change || '');
+          html += '<div class="ms-top-row' + (i >= 10 ? ' cr-hidden ms-more-top' : '') + '">';
+          html += '<span class="num ms-rank' + (i < 3 ? ' lead' : '') + '">' + (i + 1) + '</span>';
+          html += '<span class="ms-prop"><' + (url ? 'a href="' + crEsc(url) + '" target="_blank" rel="noopener"' : 'span') + ' class="ms-prop-name">' + crEsc(t.name) + '</' + (url ? 'a' : 'span') + '><span class="ms-prop-status">' + crEsc(t.status || '') + '</span></span>';
+          html += '<span class="ms-office-name' + (t.partner ? ' partner' : '') + '">' + crEsc(displayOffice(t.office)) + '</span>';
+          html += '<span class="cr-post-fig num">' + Number(t.views || 0).toLocaleString('en-GB') + '</span>';
+          html += '<span class="ms-change num' + (down ? ' down' : (t.change === 'New listing' ? ' new' : '')) + '">' + crEsc(t.change || '') + '</span></div>';
+        });
+        html += '</div>';
+        if (top.length > 10) html += '<button type="button" class="cr-btn ms-light-btn" onclick="msShowAllTop(this)">Show all ' + top.length + '</button>';
+        html += '</section>';
+      }
+
+      // Press and The Finest Edit
+      var press = (r.press || []).filter(function(p) { return msInOffice(p.office); });
+      var issues = (r.newsletter || []).map(function(iss) {
+        var homes = iss.homes.filter(function(h) { return msInOffice(h.office); });
+        return { date: iss.date, link: iss.link, homes: homes };
+      }).filter(function(iss) { return iss.homes.length; });
+      if (press.length || issues.length) {
+        html += '<section class="cr-section"><div><h2 class="cr-h2">Press and The Finest Edit</h2>';
+        html += '<p class="cr-muted" style="margin:6px 0 0;">Finest properties only. Each item links to the article or newsletter.</p></div><div class="cr-posts">';
+        press.forEach(function(p) {
+          var link = crSafeUrl(p.link);
+          html += '<div class="ms-act-row">' + '<span class="cr-platform press">Press</span><span class="cr-post-date num">' + crEsc(p.date) + '</span>';
+          html += '<span class="cr-post-text" style="font-weight:700;">' + crEsc(p.property) + '</span>';
+          html += '<span class="cr-post-text ms-detail" title="' + crEsc(p.publication + (p.theme ? ' · ' + p.theme : '')) + '">' + crEsc(p.publication + (p.theme ? ' · ' + p.theme : '')) + '</span>';
+          html += link ? '<a class="cr-post-link" href="' + crEsc(link) + '" target="_blank" rel="noopener">View →</a>' : '<span></span>';
+          html += '</div>';
+        });
+        issues.forEach(function(iss) {
+          var link = crSafeUrl(iss.link);
+          var names = iss.homes.map(function(h) { return h.name; }).join(', ');
+          var detail = (msState.office === 'All offices' && r.newsletterVisits ? Number(r.newsletterVisits).toLocaleString('en-GB') + ' visits to featured homes · ' : '') + names;
+          html += '<div class="ms-act-row"><span class="cr-platform newsletter">The Finest Edit</span><span class="cr-post-date num">' + crEsc(iss.date) + '</span>';
+          html += '<span class="cr-post-text" style="font-weight:700;">' + iss.homes.length + (iss.homes.length === 1 ? ' home featured' : ' homes featured') + '</span>';
+          html += '<span class="cr-post-text ms-detail" title="' + crEsc(detail) + '">' + crEsc(detail) + '</span>';
+          html += link ? '<a class="cr-post-link" href="' + crEsc(link) + '" target="_blank" rel="noopener">View →</a>' : '<span></span>';
+          html += '</div>';
+        });
+        html += '</div></section>';
+      }
+
+      // Social media
+      var posts = (r.social || []).filter(function(p) { return msInOffice(p.office); });
+      if (posts.length) {
+        var homesCount = {};
+        posts.forEach(function(p) { homesCount[p.property] = true; });
+        html += '<section class="cr-section"><div><h2 class="cr-h2">Social media</h2>';
+        html += '<p class="cr-muted" style="margin:6px 0 0;">' + posts.length + (posts.length === 1 ? ' post' : ' posts') + ' featuring ' + Object.keys(homesCount).length + ' Finest ' + (Object.keys(homesCount).length === 1 ? 'home' : 'homes') + ' this month.</p></div>';
+        var platforms = {};
+        posts.forEach(function(p) {
+          if (!platforms[p.platform]) platforms[p.platform] = { key: p.key, posts: 0, reach: 0, inter: 0 };
+          platforms[p.platform].posts++;
+          platforms[p.platform].reach += p.reach || 0;
+          platforms[p.platform].inter += p.inter || 0;
+        });
+        var names = Object.keys(platforms).sort(function(a, b) { return platforms[b].posts - platforms[a].posts; });
+        html += '<div class="ms-tiles">';
+        names.forEach(function(n) {
+          var p = platforms[n];
+          html += '<div class="cr-card ms-tile">' + msBadge(p.key, n) + '<span class="num ms-tile-big">' + p.posts + ' <small>' + (p.posts === 1 ? 'post' : 'posts') + '</small></span>';
+          html += '<span class="cr-muted" style="font-size:13px;">' + (p.reach ? crCompactNumber(p.reach) + ' combined reach · ' + crCompactNumber(p.inter) + ' interactions' : 'Shared with our followers') + '</span></div>';
+        });
+        html += '</div>';
+
+        var best = posts.filter(function(p) { return p.reach; }).sort(function(a, b) { return b.reach - a.reach; }).slice(0, 5);
+        if (best.length) {
+          html += '<h3 class="ms-h3">Best-performing posts</h3>' + msPostTable(best);
+        }
+        html += '<button type="button" class="cr-btn ms-light-btn" onclick="msToggleAll()">' + (msState.showAll ? 'Hide the full list' : 'See all ' + posts.length + ' posts') + '</button>';
+        if (msState.showAll) {
+          html += '<div class="ms-chips" role="group" aria-label="Platform">';
+          ['All'].concat(names).forEach(function(n) {
+            var count = n === 'All' ? posts.length : platforms[n].posts;
+            html += '<button type="button" class="ms-chip' + (n === msState.social ? ' on' : '') + '" onclick="msSetSocial(' + crEsc(JSON.stringify(n)) + ')">' + crEsc(n) + ' · ' + count + '</button>';
+          });
+          html += '</div>';
+          var filtered = posts.filter(function(p) { return msState.social === 'All' || p.platform === msState.social; });
+          html += msPostTable(filtered.slice(0, msState.shown));
+          html += '<div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;"><span class="cr-muted" style="font-size:13px;">Showing ' + Math.min(msState.shown, filtered.length) + ' of ' + filtered.length + ' · newest first</span>';
+          if (filtered.length > msState.shown) html += '<button type="button" class="cr-btn ms-light-btn" onclick="msMore()">Show more</button>';
+          html += '</div>';
+        }
+        html += '</section>';
+      }
+
+      html += '<footer class="cr-footer" style="flex-direction:column; gap:8px;"><span><strong style="color:#0E2524;">What the figures mean:</strong> <strong>Views</strong> = times a property page was opened. <strong>People</strong> = individual visitors. <strong>Reach</strong> = people who saw a social post, as reported by each platform. <strong>Interactions</strong> = likes or reactions, comments, shares and saves.</span>';
+      html += '<span>' + crEsc(r.sourceNote || '') + '</span></footer>';
+      html += '</main></div>';
+
+      var container = document.querySelector('.container');
+      (container || document.body).innerHTML = html;
+      window.scrollTo(0, scrollY);
+    }
+
+    function msPostTable(list) {
+      var html = '<div class="cr-posts"><div class="cr-posts-head"><span>Platform</span><span>Date</span><span>Property</span><span class="cr-r">Reach</span><span class="cr-r">Interactions</span><span></span></div>';
+      list.forEach(function(p) {
+        var link = crSafeUrl(p.link);
+        html += '<div class="cr-post-row">' + msBadge(p.key, p.platform) + '<span class="cr-post-date num">' + crEsc(p.date) + '</span>';
+        html += '<span class="cr-post-text" title="' + crEsc(p.property) + '">' + crEsc(p.property) + '</span>';
+        html += '<span class="cr-post-fig reach num' + (p.reach ? '' : ' empty') + '">' + (p.reach ? crCompactNumber(p.reach) + '<span class="cr-m-label"> reach</span>' : '–') + '</span>';
+        html += '<span class="cr-post-fig inter num' + (p.reach ? '' : ' empty') + '">' + (p.reach ? crCompactNumber(p.inter) + '<span class="cr-m-label"> interactions</span>' : '–') + '</span>';
+        html += link ? '<a class="cr-post-link" href="' + crEsc(link) + '" target="_blank" rel="noopener">View →</a>' : '<span></span>';
+        html += '</div>';
+      });
+      return html + '</div>';
+    }
+
+    function msShowAllTop(btn) {
+      var rows = document.querySelectorAll('.ms-more-top');
+      for (var i = 0; i < rows.length; i++) rows[i].classList.remove('cr-hidden');
+      if (btn && btn.parentNode) btn.parentNode.removeChild(btn);
     }
 
     function showReportExpired() {
