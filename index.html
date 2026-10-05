@@ -2143,6 +2143,21 @@
         html += '</div></section>';
       }
 
+      // How buyers found our listings
+      var channels = scope.channels || [];
+      if (channels.length) {
+        var maxShare = Math.max.apply(null, channels.map(function(c) { return c.share; })) || 1;
+        var colours = ['#002A29', '#2F6461', '#E7755C', '#6E9592', '#B39A6B', '#9AA8A6'];
+        html += '<section class="cr-section"><div><h2 class="cr-h2">How buyers found our listings</h2>';
+        html += '<p class="cr-muted" style="margin:6px 0 0;">Where visits to ' + (msState.office === 'All offices' ? 'our' : crEsc(msState.office)) + ' listings came from this month. Useful when explaining to vendors why social, press and The Finest Edit matter.</p></div>';
+        html += '<div class="cr-card" style="padding:22px 24px; display:flex; flex-direction:column; gap:14px;">';
+        channels.forEach(function(c, i) {
+          html += '<div class="cr-bar-row"><div class="cr-bar-top"><span style="font-weight:600;">' + crEsc(c.label) + '</span><span class="num" style="font-weight:700;">' + c.share + '%</span></div>';
+          html += '<div class="cr-bar"><div style="width:' + Math.round(c.share / maxShare * 100) + '%; background:' + colours[i % colours.length] + ';"></div></div></div>';
+        });
+        html += '</div></section>';
+      }
+
       // Most-viewed properties
       var top = scope.top || [];
       if (top.length) {
