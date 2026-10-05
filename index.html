@@ -513,6 +513,9 @@
     .ms-ed-summary { margin: 6px 0 0; }
     .ms-ed-summary strong { color: #0E2524; }
     .ms-ed-office { padding: 12px 16px; border-radius: 12px; background: #FBEFE9; font-size: 14px; font-weight: 600; color: #0E2524; }
+    .ms-link-row { display: grid; grid-template-columns: 130px minmax(0, 1fr) 100px; gap: 16px; align-items: center; padding: 12px 20px; }
+    .ms-link-row + .ms-link-row { border-top: 1px solid #EEE8DF; }
+    .ms-link-kind { justify-self: start; font-size: 11px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; padding: 3px 8px; border-radius: 6px; background: #F1ECE4; color: #5B6B69; }
     .ms-yours, .ms-req { display: inline-block; margin-left: 6px; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 10px; vertical-align: middle; }
     .ms-yours { background: #E7755C; color: #002A29; }
     .ms-req { background: #E3F1E8; color: #1F5E3B; }
@@ -552,6 +555,7 @@
       .ms-ed-row .ms-office-name { grid-column: 1; grid-row: 2; font-size: 12px; }
       .ms-ed-row .cr-bar { display: none; }
       .ms-ed-row .cr-post-fig { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
+      .ms-link-row { grid-template-columns: auto 1fr auto; gap: 10px; padding: 12px 16px; }
       .cr-posts-head { display: none; }
       .cr-post-row { grid-template-columns: auto auto 1fr; grid-template-areas: "plat date link" "text text text" "reach inter inter"; gap: 6px 12px; padding: 14px 16px; }
       .cr-post-row .cr-platform { grid-area: plat; }
@@ -2217,54 +2221,81 @@
       }
 
       // The Finest Edit: network-wide (Finest and partner homes), never filtered
-      // to nothing; the selected office's homes are highlighted.
+      // to nothing; the selected office's homes are highlighted. Per-home figures
+      // are views from the newsletter (GA), which include homes reached via a
+      // collection page, not just direct clicks in the email.
       (r.editions || []).forEach(function(ed) {
         var office = msState.office, allOff = office === 'All offices';
-        var allHomes = [];
-        (ed.sections || []).forEach(function(sec) { allHomes = allHomes.concat(sec.homes); });
-        var maxClicks = Math.max.apply(null, allHomes.map(function(h) { return h.clicks || 0; }).concat([1]));
+        var featured = ed.featured || [];
+        var viewed = featured.filter(function(h) { return h.views > 0; });
+        var quiet = featured.filter(function(h) { return !(h.views > 0); });
+        var maxViews = Math.max.apply(null, viewed.map(function(h) { return h.views; }).concat([1]));
+        var fmt = function(n) { return Number(n || 0).toLocaleString('en-GB'); };
+
         html += '<section class="cr-section"><div class="cr-section-head"><div><h2 class="cr-h2">' + crEsc(ed.title) + '</h2>';
-        var bits = [];
-        if (ed.date) bits.push('Sent ' + crEsc(ed.date));
-        if (ed.sent) bits.push('to ' + Number(ed.sent).toLocaleString('en-GB') + ' subscribers');
-        var line = bits.join(' ');
-        var figs = [];
-        if (ed.clicked) figs.push('<strong>' + Number(ed.clicked).toLocaleString('en-GB') + ' readers clicked</strong>');
-        if (ed.visits) figs.push('<strong>' + Number(ed.visits).toLocaleString('en-GB') + ' visits to our listings</strong>');
-        if (ed.requests) figs.push('<strong>' + ed.requests + (ed.requests === 1 ? ' viewing request' : ' viewing requests') + '</strong>');
-        html += '<p class="cr-muted ms-ed-summary">' + line + (figs.length ? ' · ' + figs.join(' · ') : '') + '</p></div>';
+        var sub = [];
+        if (ed.edition) sub.push('Edition ' + ed.edition);
+        if (ed.date) sub.push('sent ' + crEsc(ed.date) + (ed.sent ? ' to ' + fmt(ed.sent) + ' subscribers' : ''));
+        html += '<p class="cr-muted ms-ed-summary">' + sub.join(' · ') + '</p></div>';
         if (crSafeUrl(ed.link)) html += '<a href="' + crEsc(crSafeUrl(ed.link)) + '" target="_blank" rel="noopener" style="font-size:14px; font-weight:700; white-space:nowrap;">View the newsletter →</a>';
         html += '</div>';
 
+        var tiles = [];
+        if (ed.clicked) tiles.push(['Readers who clicked', fmt(ed.clicked), ed.sent ? Math.round(ed.clicked / ed.sent * 100) + '% of subscribers' : '']);
+        if (ed.totalClicks) tiles.push(['Clicks in the email', fmt(ed.totalClicks), 'On homes, collections and articles']);
+        if (ed.visits) tiles.push(['Visits to our listings', fmt(ed.visits), 'From the newsletter']);
+        if (ed.requests) tiles.push(['Viewing requests', fmt(ed.requests), 'Sent after reading the newsletter']);
+        if (tiles.length) {
+          html += '<div class="cr-kpis">';
+          tiles.forEach(function(t) { html += '<div class="cr-kpi"><span class="cr-kpi-label">' + crEsc(t[0]) + '</span><span class="cr-kpi-value num">' + crEsc(t[1]) + '</span><span class="cr-kpi-note">' + crEsc(t[2]) + '</span></div>'; });
+          html += '</div>';
+        }
+
         if (!allOff) {
-          var mine = allHomes.filter(function(h) { return h.office === office; });
-          var name = displayOffice(office).replace(/^Finest /, '');
+          var mine = featured.filter(function(h) { return h.office === office; });
+          var oname = displayOffice(office).replace(/^Finest /, '');
           if (mine.length) {
-            var mc = mine.reduce(function(s, h) { return s + (h.clicks || 0); }, 0);
-            var mr = mine.reduce(function(s, h) { return s + (h.requests || 0); }, 0);
-            html += '<div class="ms-ed-office">' + mine.length + ' ' + crEsc(name) + (mine.length === 1 ? ' home' : ' homes') + ' featured · ' + mc.toLocaleString('en-GB') + ' clicks' + (mr ? ' · ' + mr + (mr === 1 ? ' viewing request' : ' viewing requests') : '') + '</div>';
+            var mv = mine.reduce(function(sum, h) { return sum + (h.views || 0); }, 0);
+            var mr = mine.reduce(function(sum, h) { return sum + (h.requests || 0); }, 0);
+            html += '<div class="ms-ed-office">' + mine.length + ' ' + crEsc(oname) + (mine.length === 1 ? ' home' : ' homes') + ' featured' + (mv ? ' · ' + fmt(mv) + ' views from the newsletter' : '') + (mr ? ' · ' + mr + (mr === 1 ? ' viewing request' : ' viewing requests') : '') + '</div>';
           } else {
             var next = new Date(r.year, r.month, 1);
             var nextName = next.toLocaleString('en-GB', { month: 'long' });
-            html += '<div class="ms-ed-office">No ' + crEsc(name) + ' homes in this issue. The ' + nextName + ' issue goes out in the first week of ' + nextName + '; ask marketing if you’d like a home featured.</div>';
+            html += '<div class="ms-ed-office">No ' + crEsc(oname) + ' homes in this issue. The ' + nextName + ' issue goes out in the first week of ' + nextName + '; ask marketing if you’d like a home featured.</div>';
           }
         }
 
-        html += '<div class="cr-posts">';
-        (ed.sections || []).forEach(function(sec) {
-          html += '<div class="ms-ed-section">' + crEsc(sec.name) + '</div>';
-          sec.homes.forEach(function(h) {
+        if (viewed.length) {
+          html += '<h3 class="ms-h3">Featured homes · views from the newsletter</h3><div class="cr-posts">';
+          viewed.forEach(function(h) {
             var yours = !allOff && h.office === office;
             var who = h.partner ? 'Partner: ' + (h.agent || 'agent') : displayOffice(h.office || 'Finest');
             html += '<div class="ms-ed-row' + (yours ? ' yours' : '') + '">';
             html += '<span class="ms-prop-name">' + crEsc(h.name) + (yours ? ' <span class="ms-yours">Your office</span>' : '') + (h.requests ? ' <span class="ms-req">' + h.requests + (h.requests === 1 ? ' viewing request' : ' viewing requests') + '</span>' : '') + '</span>';
             html += '<span class="ms-office-name' + (h.partner ? ' partner' : '') + '">' + crEsc(who) + '</span>';
-            html += '<span class="cr-bar"><span style="display:block; height:8px; border-radius:4px; width:' + Math.round((h.clicks || 0) / maxClicks * 100) + '%; background:#7A5E2E;"></span></span>';
-            html += '<span class="cr-post-fig num">' + Number(h.clicks || 0).toLocaleString('en-GB') + '<span class="ms-ed-unit"> clicks</span></span></div>';
+            html += '<span class="cr-bar"><span style="display:block; height:8px; border-radius:4px; width:' + Math.round(h.views / maxViews * 100) + '%; background:#7A5E2E;"></span></span>';
+            html += '<span class="cr-post-fig num">' + fmt(h.views) + '<span class="ms-ed-unit"> views</span></span></div>';
           });
-        });
-        html += '</div>';
-        if (ed.requests) html += '<p class="cr-muted" style="margin:0; font-size:12px;">Viewing requests: enquiry forms sent during a visit that started from the newsletter. A guide rather than an exact count: people who come back later to enquire aren’t included.</p>';
+          html += '</div>';
+        }
+        if (quiet.length) {
+          html += '<p class="cr-muted" style="margin:0;"><strong style="color:#0E2524;">Also featured:</strong> ' + quiet.map(function(h) {
+            var mark = !allOff && h.office === office;
+            return (mark ? '<strong style="color:#B8462C;">' : '') + crEsc(h.name) + (mark ? '</strong>' : '');
+          }).join(', ') + '</p>';
+        }
+        if (ed.otherListings) html += '<p class="cr-muted" style="margin:0;">Readers also went on to browse <strong style="color:#0E2524;">' + ed.otherListings + ' other listings</strong> during those visits.</p>';
+
+        if ((ed.links || []).length) {
+          html += '<h3 class="ms-h3">Most-clicked in the email</h3><div class="cr-posts">';
+          ed.links.forEach(function(l) {
+            html += '<div class="ms-link-row"><span class="ms-link-kind">' + crEsc(l.kind) + '</span><span class="ms-prop-name">' + crEsc(l.label) + '</span>';
+            html += '<span class="cr-post-fig num">' + fmt(l.clicks) + '<span class="ms-ed-unit"> clicks</span></span></div>';
+          });
+          html += '</div>';
+        }
+        html += '<p class="cr-muted" style="margin:0; font-size:12px;">Views from the newsletter include homes reached through a collection or article, not just direct clicks.' +
+          (ed.requests ? ' Viewing requests are enquiry forms sent during those visits: a guide rather than an exact count.' : '') + '</p>';
         html += '</section>';
       });
 
