@@ -497,6 +497,55 @@
     .ms-light-btn { align-self: flex-start; color: #0E2524 !important; border-color: #D9D3C9 !important; }
     .ms-act-row { display: grid; grid-template-columns: 140px 64px minmax(0, 1fr) minmax(0, 1.4fr) 70px; gap: 16px; align-items: center; padding: 13px 20px; }
     .ms-act-row + .ms-act-row { border-top: 1px solid #EEE8DF; }
+    /* ===== Staff social schedule (reportType 'contentPlanning', version 2) ===== */
+    .ss-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .ss-list { background: #FFFFFF; border: 1px solid #E4DED4; border-radius: 16px; overflow: hidden; }
+    .ss-day { display: flex; justify-content: space-between; gap: 12px; padding: 12px 20px; background: #F6EEE2; font-size: 13px; font-weight: 800; }
+    .ss-day + .ss-row, .ss-row + .ss-row, .ss-row + .ss-day { border-top: 1px solid #F1ECE4; }
+    .ss-day span:last-child { font-weight: 600; color: #5B6B69; }
+    .ss-row { position: relative; display: grid; gap: 16px; align-items: center; padding: 12px 20px 12px 24px; font-size: 14px; }
+    .ss-row.post { grid-template-columns: 86px 140px minmax(0, 1fr) 200px 110px; }
+    .ss-row.push { grid-template-columns: minmax(0, 1fr) 210px 150px 110px 150px 150px; }
+    .ss-row.nat { grid-template-columns: minmax(0, 1fr) 190px 110px 220px 110px; }
+    .ss-row.flag { grid-template-columns: minmax(0, 1fr) 200px 240px; }
+    .ss-row.head { padding-top: 11px; padding-bottom: 11px; background: #F6EEE2; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #5B6B69; }
+    .ss-stripe { position: absolute; left: 0; top: 8px; bottom: 8px; width: 4px; border-radius: 0 3px 3px 0; }
+    .ss-time { color: #5B6B69; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .ss-plat { justify-self: start; display: inline-flex; align-items: center; gap: 8px; height: 30px; padding: 0 12px 0 4px; border-radius: 15px; font-size: 13px; font-weight: 700; }
+    .ss-ico { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; }
+    .ss-ico svg { width: 15px; height: 15px; display: block; }
+    .ss-ico.sm { width: 20px; height: 20px; } .ss-ico.sm svg { width: 13px; height: 13px; }
+    .cr a.ss-home { color: #0E2524; font-weight: 800; text-decoration: none; border-bottom: 1px solid #D9CFBF; }
+    .cr a.ss-home:hover { color: #B8462C; border-color: #B8462C; }
+    .ss-home-plain { font-weight: 800; }
+    .ss-arrow { color: #B8462C; font-weight: 700; margin-left: 3px; }
+    .ss-homes { min-width: 0; line-height: 1.5; }
+    .ss-office { display: flex; align-items: center; gap: 8px; min-width: 0; font-size: 13px; color: #3E5250; }
+    .ss-office span:last-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ss-swatch { flex: none; width: 10px; height: 10px; border-radius: 3px; }
+    .ss-tag { justify-self: start; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 6px; background: #FBEFE9; color: #993C1D; white-space: nowrap; }
+    .ss-tag.push { background: #E1EEEC; color: #0F4F4A; }
+    .ss-status { justify-self: start; font-size: 12px; font-weight: 800; padding: 4px 10px; border-radius: 8px; white-space: nowrap; }
+    .ss-small { font-size: 13px; }
+    .ss-muted { font-size: 13px; color: #5B6B69; }
+    .ss-flags { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+    .ss-flag { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 16px 18px; border-radius: 14px; background: #FFFFFF; border: 1px solid #E4DED4; cursor: pointer; font: inherit; color: #0E2524; text-align: left; }
+    .ss-flag.on { border: 2px solid #E7755C; padding: 15px 17px; }
+    .ss-flag b { font-size: 14px; font-weight: 800; }
+    .ss-flag .cr-kpi-value { font-size: 40px; }
+    .ss-empty { padding: 18px 20px; font-size: 14px; color: #5B6B69; }
+    @media (max-width: 860px) {
+      .ss-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .ss-row.post { grid-template-columns: 70px minmax(0, 1fr); gap: 6px 12px; }
+      .ss-row.post .ss-plat { grid-column: 2; grid-row: 1; }
+      .ss-row.post .ss-homes { grid-column: 1 / -1; }
+      .ss-row.post .ss-office { grid-column: 1 / -1; }
+      .ss-row.post .ss-tag { grid-column: 1 / -1; }
+      .ss-row.push, .ss-row.nat, .ss-row.flag { grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; }
+      .ss-row.push > :not(.ss-stripe):not(.ss-homes):not(.ss-status), .ss-row.nat > :not(.ss-homes):not(.ss-office), .ss-row.flag > :not(.ss-homes):not(.ss-office) { grid-column: 1; font-size: 13px; color: #3E5250; }
+      .ss-row.push .ss-status { grid-column: 2; grid-row: 1; }
+      .ss-row.head { display: none; }
+    }
     .ms-place-pair { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 16px; margin-top: 20px; }
     .ms-place { display: flex; flex-direction: column; gap: 4px; padding: 24px 26px; border-radius: 16px; background: #FFFFFF; border: 1px solid #E4DED4; }
     .ms-place.lead { background: #002A29; border-color: #002A29; color: #FBF5EB; }
@@ -723,6 +772,8 @@
             displayPropertyStoryReport(data, result);
           } else if (data.reportType === 'property') {
             displayPropertyReport(data, result);
+          } else if (data.reportType === 'contentPlanning' && data.reportVersion >= 2) {
+            displayStaffSchedule(data, result);
           } else if (data.reportType === 'contentPlanning') {
             displayContentPlanningReport(data, result);
           } else {
@@ -910,6 +961,8 @@
           single.groupedProperties = [{
             propertyId: post.propertyId,
             propertyName: post.propertyName,
+            propertyUrl: post.propertyUrl,
+            office: post.office,
             agent: post.agent
           }];
           output.push(single);
@@ -930,6 +983,8 @@
         target.groupedProperties.push({
           propertyId: post.propertyId,
           propertyName: post.propertyName,
+          propertyUrl: post.propertyUrl,
+          office: post.office,
           agent: post.agent
         });
         target.groupCount = target.groupedProperties.length;
@@ -2120,6 +2175,227 @@
       // Redraw at the page width when printing / saving as PDF.
       window.addEventListener('beforeprint', function() { crChart.resize(); });
       window.addEventListener('afterprint', function() { crChart.resize(); });
+    }
+
+    // ===== Staff social schedule (reportType 'contentPlanning', version 2) =====
+    // What is going out on social, the homes being pushed, Rightmove Finest
+    // National and flagged homes, filtered by office (partners show under All offices).
+    var ssData = null, ssMeta = null;
+    var ssState = { office: 'All offices', flag: '' };
+    var SS_MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    var SS_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    var SS_PLATFORMS = {
+      facebook: { label: 'Facebook', color: '#1877F2', tint: '#E7F0FD', text: '#0C447C', svg: '<path fill="#fff" d="M13.5 21v-7h2.4l.4-3h-2.8V9.2c0-.8.3-1.4 1.5-1.4h1.4V5.2c-.3 0-1.1-.1-2.1-.1-2.1 0-3.6 1.3-3.6 3.7V11H8.3v3h2.4v7z"/>' },
+      instagram: { label: 'Instagram', color: '#D6249F', tint: '#FBEAF4', text: '#72243E', svg: '<rect x="5" y="5" width="14" height="14" rx="4" fill="none" stroke="#fff" stroke-width="2"/><circle cx="12" cy="12" r="3.2" fill="none" stroke="#fff" stroke-width="2"/><circle cx="16.3" cy="7.7" r="1" fill="#fff"/>' },
+      linkedin: { label: 'LinkedIn', color: '#0A66C2', tint: '#E6EFF8', text: '#0C447C', svg: '<rect x="6" y="10" width="2.6" height="8" fill="#fff"/><circle cx="7.3" cy="7" r="1.5" fill="#fff"/><path fill="#fff" d="M10.5 10h2.5v1.2c.4-.8 1.4-1.4 2.7-1.4 2.2 0 2.8 1.4 2.8 3.4V18h-2.6v-4.2c0-1-.2-1.8-1.2-1.8s-1.6.7-1.6 1.8V18h-2.6z"/>' },
+      tiktok: { label: 'TikTok', color: '#111111', tint: '#EEEDEA', text: '#2C2C2A', svg: '<path fill="#fff" d="M14.5 4c.3 1.9 1.4 3.1 3.5 3.3v2.6c-1.3 0-2.5-.4-3.5-1.1v5.4a4.8 4.8 0 1 1-4.8-4.8c.2 0 .5 0 .7.1v2.7a2.2 2.2 0 1 0 1.5 2.1V4z"/>' },
+      newsletter: { label: 'Newsletter', color: '#7A5E2E', tint: '#F3EBDD', text: '#5B4520', svg: '<rect x="5" y="7" width="14" height="10" rx="2" fill="none" stroke="#fff" stroke-width="2"/><path d="M5.5 8l6.5 5 6.5-5" fill="none" stroke="#fff" stroke-width="2"/>' }
+    };
+    // Usual posting times when a post has no time of its own.
+    var SS_DEFAULT_TIME = { instagram: '07:30', linkedin: '12:00', tiktok: 'Afternoon' };
+
+    function ssParseDate(value) {
+      var str = String(value || '').trim(), m;
+      if ((m = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/))) return new Date(+m[3], +m[2] - 1, +m[1]);
+      if ((m = str.match(/^(\d{4})-(\d{2})-(\d{2})/))) return new Date(+m[1], +m[2] - 1, +m[3]);
+      return null;
+    }
+    function ssShort(d) { return d ? d.getDate() + ' ' + SS_MONTHS[d.getMonth()].slice(0, 3) : ''; }
+    function ssToday() { var n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()); }
+    function ssPlatformKey(platform) { var k = getCpPlatformClass(platform); return SS_PLATFORMS[k] ? k : ''; }
+    function ssIcon(key, small) {
+      var p = SS_PLATFORMS[key];
+      return p ? '<span class="ss-ico' + (small ? ' sm' : '') + '" style="background:' + p.color + ';"><svg viewBox="0 0 24 24" aria-hidden="true">' + p.svg + '</svg></span>' : '';
+    }
+    function ssAgentColor(item) { return getShareAgentColor(item.agent || item.office) || '#C9BBA6'; }
+    function ssOfficeLabel(item) {
+      var name = item.office ? displayOffice(item.office) : displayOffice(item.agent || '');
+      return String(name || '').replace(/^Finest /, '');
+    }
+    function ssInOffice(item) { return ssState.office === 'All offices' || item.office === ssState.office; }
+    function ssHome(name, url) {
+      var safe = crSafeUrl(url);
+      return safe
+        ? '<a class="ss-home" href="' + crEsc(safe) + '" target="_blank" rel="noopener">' + crEsc(name) + '<span class="ss-arrow">↗</span></a>'
+        : '<span class="ss-home-plain">' + crEsc(name) + '</span>';
+    }
+    function ssOfficeCell(item) {
+      return '<span class="ss-office"><span class="ss-swatch" style="background:' + crEsc(ssAgentColor(item)) + ';"></span><span>' + crEsc(ssOfficeLabel(item)) + '</span></span>';
+    }
+
+    function displayStaffSchedule(data, meta) {
+      ssData = data; ssMeta = meta || {};
+      ssState = { office: 'All offices', flag: '' };
+      document.body.classList.add('client-report');
+      document.title = 'Social schedule · Finest';
+      var container = document.querySelector('.container');
+      if (container) { container.style.maxWidth = 'none'; container.style.margin = '0'; }
+      ssRender();
+    }
+    function ssSetOffice(office) { ssState.office = office; ssRender(); }
+    function ssToggleFlag(flag) { ssState.flag = ssState.flag === flag ? '' : flag; ssRender(); }
+
+    function ssRender() {
+      var d = ssData, today = ssToday(), all = ssState.office === 'All offices';
+      var scrollY = window.scrollY;
+
+      // Upcoming posts from today, in time order within each day.
+      var days = [], lastDay = null, total = 0, week = 0;
+      var weekEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 6);
+      (d.scheduledPosts || []).forEach(function(day) {
+        var date = ssParseDate(day.date);
+        if (!date || date < today) return;
+        var posts = groupCpCalendarPosts((day.posts || []).filter(ssInOffice)).map(function(p) {
+          var key = ssPlatformKey(p.platform);
+          var time = normalizeCpPostTime(p.postTime) || SS_DEFAULT_TIME[key] || '';
+          return { post: p, key: key, time: time, sort: time === 'Afternoon' ? '14:00' : (time || '99:99') };
+        }).sort(function(a, b) { return a.sort < b.sort ? -1 : a.sort > b.sort ? 1 : 0; });
+        if (!posts.length) return;
+        total += posts.length;
+        if (date <= weekEnd) week += posts.length;
+        days.push({ date: date, posts: posts });
+        lastDay = date;
+      });
+
+      var push = (d.pushProperties || []).filter(ssInOffice);
+      var flagOrder = [
+        ['Active Interest', 'Active interest', 'Already has active interest, so no post needed'],
+        ['Private', 'Private', 'No social media and no PR'],
+        ['On Hold', 'On hold', 'No social media and no PR'],
+        ['No Social', 'No social', 'No social media, PR is fine'],
+        ['No PR', 'No PR', 'No PR, social media is fine']
+      ];
+      var groups = d.flaggedGroups || {};
+      var flags = flagOrder.map(function(f) { return { key: f[0], label: f[1], meaning: f[2], rows: (groups[f[0]] || []).filter(ssInOffice) }; })
+        .filter(function(f) { return f.key !== 'No PR' || f.rows.length; });
+      var flagTotal = flags.reduce(function(sum, f) { return sum + f.rows.length; }, 0);
+      var national = (d.londonProperties || []).filter(function(n) { return !n.londonRequiresRemoval && ssInOffice(n); });
+
+      var pushStatus = function(p) {
+        var booked = p.scheduled && ssParseDate(p.scheduled.day);
+        if (booked && booked >= today) return { label: 'Booked, ' + SS_DAYS[booked.getDay()].slice(0, 3) + ' ' + ssShort(booked), bg: '#E3F1EA', fg: '#1F6B45', rank: 5 };
+        var u = String(p.urgency || '').toLowerCase();
+        if (u.indexOf('never') !== -1) return { label: 'Never featured', bg: '#FBEFE9', fg: '#993C1D', rank: 0 };
+        if (u.indexOf('overdue') !== -1) return { label: 'Overdue', bg: '#FBEFE9', fg: '#993C1D', rank: 1 };
+        if (u.indexOf('due soon') !== -1) return { label: 'Due soon', bg: '#FDF1D8', fg: '#7A5410', rank: 2 };
+        if (u.indexOf('new listing') !== -1) return { label: 'New listing', bg: '#FDF1D8', fg: '#7A5410', rank: 3 };
+        return { label: 'Covered', bg: '#EFECE6', fg: '#5B6B69', rank: 4 };
+      };
+      push = push.map(function(p) { return { p: p, status: pushStatus(p) }; }).sort(function(a, b) { return a.status.rank - b.status.rank; });
+      var unbooked = push.filter(function(x) { return x.status.rank < 5; }).length;
+
+      var html = '<div class="cr">';
+      html += '<header class="cr-hero"><div class="cr-wrap">';
+      html += '<div class="cr-top"><div>' + CR_LOGO_SVG + '<div class="cr-logo-sub" style="margin-top:10px;">Social schedule · for Finest sales teams</div></div>';
+      html += '<div class="cr-actions"><button type="button" class="cr-btn" onclick="window.print()">Save as PDF</button></div></div>';
+      var expires = ssMeta.expiresAt ? new Date(ssMeta.expiresAt) : null;
+      var range = days.length ? days[0].date.getDate() + ' ' + SS_MONTHS[days[0].date.getMonth()] + ' to ' + lastDay.getDate() + ' ' + SS_MONTHS[lastDay.getMonth()] : '';
+      html += '<div class="cr-notice" style="padding:40px 0 20px; max-width:760px;"><h1 class="cr-title">What’s going out</h1>';
+      html += '<p class="cr-headline">' + (all
+        ? 'Our upcoming social posts across every office, the homes getting extra support, what is on Rightmove Finest National, and flagged homes.'
+        : 'Upcoming social posts for ' + crEsc(displayOffice(ssState.office)) + ' homes, the homes getting extra support, what is on Rightmove Finest National, and flagged homes.') + '</p>';
+      var when = [];
+      if (range) when.push(range);
+      if (expires && !isNaN(expires.getTime())) when.push('link valid until ' + expires.getDate() + ' ' + SS_MONTHS[expires.getMonth()]);
+      if (when.length) html += '<p class="cr-logo-sub" style="margin-top:14px; letter-spacing:0.04em; text-transform:none; font-size:13px;">' + crEsc(when.join(' · ')) + '</p>';
+      html += '</div><div class="ms-offices" role="group" aria-label="Office">';
+      ['All offices'].concat(d.offices || []).forEach(function(o) {
+        html += '<button type="button" class="ms-office' + (o === ssState.office ? ' on' : '') + '" onclick="ssSetOffice(' + crEsc(JSON.stringify(o)) + ')">' + crEsc(o) + '</button>';
+      });
+      html += '</div></div></header><main class="cr-wrap cr-main">';
+
+      // At a glance
+      html += '<section class="cr-section"><div class="cr-kpis ss-kpis">';
+      [['Posts planned', total, lastDay ? 'To ' + ssShort(lastDay) : 'Nothing planned yet'],
+       ['Next 7 days', week, 'To ' + SS_DAYS[weekEnd.getDay()] + ' ' + ssShort(weekEnd)],
+       ['Homes being pushed', push.length, push.length ? unbooked + ' not yet booked' : 'None right now'],
+       ['Flagged homes', flagTotal, 'No social posts and/or PR']].forEach(function(k) {
+        html += '<div class="cr-kpi"><span class="cr-kpi-label">' + crEsc(k[0]) + '</span><span class="cr-kpi-value num">' + k[1] + '</span><span class="cr-kpi-note">' + crEsc(k[2]) + '</span></div>';
+      });
+      html += '</div></section>';
+
+      // Coming up
+      html += '<section class="cr-section"><h2 class="cr-h2">Coming up</h2><div class="ss-list">';
+      if (!days.length) html += '<div class="ss-empty">Nothing is planned' + (all ? '' : ' for ' + crEsc(displayOffice(ssState.office)) + ' homes') + ' yet.</div>';
+      days.forEach(function(day) {
+        var diff = Math.round((day.date - today) / 86400000);
+        var label = (diff === 0 ? 'Today · ' : diff === 1 ? 'Tomorrow · ' : '') + SS_DAYS[day.date.getDay()] + ' ' + day.date.getDate() + ' ' + SS_MONTHS[day.date.getMonth()];
+        html += '<div class="ss-day"><span>' + crEsc(label) + '</span><span>' + day.posts.length + (day.posts.length === 1 ? ' post' : ' posts') + '</span></div>';
+        day.posts.forEach(function(item) {
+          var p = item.post, plat = SS_PLATFORMS[item.key];
+          var homes = (p.groupedProperties && p.groupedProperties.length ? p.groupedProperties : [p]);
+          var reason = getCpReasonLabel(p.contentReason);
+          html += '<div class="ss-row post"><span class="ss-stripe" style="background:' + crEsc(ssAgentColor(p)) + ';"></span>';
+          html += '<span class="ss-time">' + crEsc(item.time) + '</span>';
+          html += plat ? '<span class="ss-plat" style="background:' + plat.tint + '; color:' + plat.text + ';">' + ssIcon(item.key) + plat.label + '</span>' : '<span class="ss-plat" style="background:#EFECE6;">' + crEsc(getCpPlatformLabel(p.platform)) + '</span>';
+          html += '<span class="ss-homes">' + homes.map(function(h) { return ssHome(h.propertyName || h.propertyId || 'Scheduled post', h.propertyUrl); }).join(', ') + '</span>';
+          html += ssOfficeCell(p);
+          html += reason ? '<span class="ss-tag' + (reason === 'Push' ? ' push' : '') + '">' + crEsc(reason) + '</span>' : '<span></span>';
+          html += '</div>';
+        });
+      });
+      html += '</div></section>';
+
+      // Homes we're pushing
+      if (push.length) {
+        html += '<section class="cr-section"><div><h2 class="cr-h2">Homes we’re pushing</h2>';
+        html += '<p class="cr-muted" style="margin:6px 0 0;">Finest homes getting extra social support. Homes needing a post come first; booked homes are at the bottom.</p></div><div class="ss-list">';
+        html += '<div class="ss-row push head"><span>Home</span><span>Price</span><span>Office</span><span>On the market</span><span>Last social post</span><span>Status</span></div>';
+        push.forEach(function(x) {
+          var p = x.p, last = p.lastSocial, lastDate = last ? ssParseDate(last.dateISO) : ssParseDate(p.lastFacebook);
+          var lastKey = last ? ssPlatformKey(last.platform) : (p.lastFacebook ? 'facebook' : '');
+          html += '<div class="ss-row push"><span class="ss-stripe" style="background:' + crEsc(ssAgentColor(p)) + ';"></span>';
+          html += '<span class="ss-homes">' + ssHome(p.propertyName || p.propertyId, p.propertyUrl) + '</span>';
+          html += '<span class="ss-small num">' + crEsc(p.guidePrice && p.guidePrice !== '—' ? p.guidePrice : '') + '</span>';
+          html += ssOfficeCell(p);
+          html += '<span class="num">' + (p.weeksOnMarket != null ? crEsc(p.weeksOnMarket + (p.weeksOnMarket === 1 ? ' week' : ' weeks')) : '') + '</span>';
+          html += '<span class="ss-office">' + (lastDate ? ssIcon(lastKey, true) + '<span>' + crEsc(ssShort(lastDate)) + '</span>' : '<span>None yet</span>') + '</span>';
+          html += '<span class="ss-status" style="background:' + x.status.bg + '; color:' + x.status.fg + ';">' + crEsc(x.status.label) + '</span></div>';
+        });
+        html += '</div></section>';
+      }
+
+      // Rightmove Finest National
+      if (national.length) {
+        html += '<section class="cr-section"><div><h2 class="cr-h2">Rightmove Finest National</h2>';
+        html += '<p class="cr-muted" style="margin:6px 0 0;">Homes live on our Rightmove Finest National profile.</p></div><div class="ss-list">';
+        national.forEach(function(n) {
+          var added = ssParseDate(n.londonAddedDate);
+          html += '<div class="ss-row nat"><span class="ss-homes">' + ssHome(n.propertyName || n.propertyId, n.propertyUrl) + '</span>' + ssOfficeCell(n);
+          html += '<span class="ss-small">' + crEsc(n.status || '') + '</span><span class="ss-small num">' + crEsc(n.priceDisplay || '') + '</span>';
+          html += '<span class="ss-muted">' + (added ? 'Added ' + crEsc(ssShort(added)) : '') + '</span></div>';
+        });
+        html += '</div></section>';
+      }
+
+      // Flagged homes
+      if (flagTotal) {
+        html += '<section class="cr-section"><div><h2 class="cr-h2">Flagged homes</h2>';
+        html += '<p class="cr-muted" style="margin:6px 0 0;">Flagged homes get no social posts, and some no PR either. Please check your homes here are still right, so nothing misses out. Tap a group to see its homes.</p></div>';
+        html += '<div class="ss-flags">';
+        flags.forEach(function(f) {
+          html += '<button type="button" class="ss-flag' + (ssState.flag === f.key ? ' on' : '') + '" onclick="ssToggleFlag(' + crEsc(JSON.stringify(f.key)) + ')"><b>' + crEsc(f.label) + '</b>';
+          html += '<span class="cr-kpi-value num">' + f.rows.length + '</span><span class="ss-muted">' + crEsc(f.meaning) + '</span></button>';
+        });
+        html += '</div>';
+        var open = flags.filter(function(f) { return f.key === ssState.flag; })[0];
+        if (open) {
+          html += '<div class="ss-list"><div class="ss-day"><span>' + crEsc(open.label) + '</span><span>' + open.rows.length + (open.rows.length === 1 ? ' home' : ' homes') + '</span></div>';
+          if (!open.rows.length) html += '<div class="ss-empty">No homes in this group' + (all ? '' : ' for ' + crEsc(displayOffice(ssState.office))) + '.</div>';
+          open.rows.forEach(function(r) {
+            html += '<div class="ss-row flag"><span class="ss-homes">' + ssHome(r.propertyName || r.propertyId, r.propertyUrl) + '</span>' + ssOfficeCell(r);
+            html += '<span class="ss-small num">' + crEsc(r.guidePrice && r.guidePrice !== '—' ? r.guidePrice : '') + '</span></div>';
+          });
+          html += '</div>';
+        }
+        html += '</section>';
+      }
+
+      html += '<p class="cr-muted" style="font-size:13px;">Internal use only. Plans can change; the content planner in the marketing app is always the latest version.</p>';
+      html += '</main></div>';
+      var target = document.querySelector('.container') || document.body;
+      target.innerHTML = html;
+      window.scrollTo(0, scrollY);
     }
 
     // ===== Monthly marketing report for sales staff (reportType 'monthlyStaff') =====
