@@ -503,9 +503,6 @@
     .ss-row + .ss-week { border-top: 1px solid #E4DED4; }
     .ss-more { align-self: flex-start; height: 44px; padding: 0 18px; border-radius: 22px; border: 1px solid #D9D3C9; background: transparent; color: #0E2524; font: 700 13px 'Manrope', system-ui, sans-serif; cursor: pointer; }
     .ss-more:hover { border-color: #0E2524; }
-    .ss-jumps { display: flex; flex-wrap: wrap; gap: 6px 22px; margin: 22px 0 8px; padding-top: 18px; border-top: 1px solid #1E4A47; }
-    .cr .ss-jumps a { color: #C9D6D4; font-size: 13px; font-weight: 700; text-decoration: none; }
-    .cr .ss-jumps a:hover { color: #E7755C; }
     .cr-section[id] { scroll-margin-top: 16px; }
     .ss-list { background: #FFFFFF; border: 1px solid #E4DED4; border-radius: 16px; overflow: hidden; }
     .ss-day { display: flex; justify-content: space-between; gap: 12px; padding: 12px 20px; background: #F6EEE2; font-size: 13px; font-weight: 800; }
@@ -2246,7 +2243,6 @@
     function ssToggleFlag(flag) { ssState.flag = ssState.flag === flag ? '' : flag; ssRender(); }
     function ssShowLater() { ssState.showLater = !ssState.showLater; ssRender(); }
     function ssShowNational() { ssState.allNational = !ssState.allNational; ssRender(); }
-    function ssJump(id) { var el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
 
     function ssRender() {
       var d = ssData, today = ssToday(), all = ssState.office === 'All offices';
@@ -2320,13 +2316,6 @@
         html += '<button type="button" class="ms-office' + (o === ssState.office ? ' on' : '') + '" onclick="ssSetOffice(' + crEsc(JSON.stringify(o)) + ')">' + crEsc(o) + '</button>';
       });
       html += '</div>';
-      var jumps = [['ss-coming', 'Coming up']];
-      if (push.length) jumps.push(['ss-push', 'Homes we’re pushing']);
-      if (national.length) jumps.push(['ss-national', 'Rightmove Finest National']);
-      if (flagTotal) jumps.push(['ss-flags', 'Flagged homes']);
-      html += '<nav class="ss-jumps" aria-label="Sections">' + jumps.map(function(j) {
-        return '<a href="#' + j[0] + '" onclick="ssJump(\'' + j[0] + '\'); return false;">' + crEsc(j[1]) + '</a>';
-      }).join('') + '</nav>';
       html += '</div></header><main class="cr-wrap cr-main">';
 
       // At a glance
