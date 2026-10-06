@@ -503,7 +503,8 @@
     .ss-day { display: flex; justify-content: space-between; gap: 12px; padding: 12px 20px; background: #F6EEE2; font-size: 13px; font-weight: 800; }
     .ss-day + .ss-row, .ss-row + .ss-row, .ss-row + .ss-day { border-top: 1px solid #F1ECE4; }
     .ss-day span:last-child { font-weight: 600; color: #5B6B69; }
-    .ss-row { position: relative; display: grid; gap: 16px; align-items: center; padding: 12px 20px 12px 24px; font-size: 14px; }
+    .ss-row { position: relative; display: grid; gap: 16px; align-items: center; padding: 12px 20px; font-size: 14px; }
+    .ss-row.post { padding-left: 24px; }
     .ss-row.post { grid-template-columns: 86px 140px minmax(0, 1fr) 200px 110px; }
     .ss-row.push { grid-template-columns: minmax(0, 1fr) 210px 150px 110px 150px 150px; }
     .ss-row.nat { grid-template-columns: minmax(0, 1fr) 190px 110px 220px 110px; }
@@ -542,7 +543,7 @@
       .ss-row.post .ss-office { grid-column: 1 / -1; }
       .ss-row.post .ss-tag { grid-column: 1 / -1; }
       .ss-row.push, .ss-row.nat, .ss-row.flag { grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; }
-      .ss-row.push > :not(.ss-stripe):not(.ss-homes):not(.ss-status), .ss-row.nat > :not(.ss-homes):not(.ss-office), .ss-row.flag > :not(.ss-homes):not(.ss-office) { grid-column: 1; font-size: 13px; color: #3E5250; }
+      .ss-row.push > :not(.ss-homes):not(.ss-status), .ss-row.nat > :not(.ss-homes):not(.ss-office), .ss-row.flag > :not(.ss-homes):not(.ss-office) { grid-column: 1; font-size: 13px; color: #3E5250; }
       .ss-row.push .ss-status { grid-column: 2; grid-row: 1; }
       .ss-row.head { display: none; }
     }
@@ -2344,7 +2345,7 @@
         push.forEach(function(x) {
           var p = x.p, last = p.lastSocial, lastDate = last ? ssParseDate(last.dateISO) : ssParseDate(p.lastFacebook);
           var lastKey = last ? ssPlatformKey(last.platform) : (p.lastFacebook ? 'facebook' : '');
-          html += '<div class="ss-row push"><span class="ss-stripe" style="background:' + crEsc(ssAgentColor(p)) + ';"></span>';
+          html += '<div class="ss-row push">';
           html += '<span class="ss-homes">' + ssHome(p.propertyName || p.propertyId, p.propertyUrl) + '</span>';
           html += '<span class="ss-small num">' + crEsc(p.guidePrice && p.guidePrice !== '—' ? p.guidePrice : '') + '</span>';
           html += ssOfficeCell(p);
