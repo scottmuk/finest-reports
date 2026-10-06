@@ -499,6 +499,14 @@
     .ms-act-row + .ms-act-row { border-top: 1px solid #EEE8DF; }
     /* ===== Staff social schedule (reportType 'contentPlanning', version 2) ===== */
     .ss-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .ss-week { padding: 18px 20px 8px; font-family: 'the-seasons', 'Fraunces', Georgia, serif; font-weight: 300; font-size: 22px; color: #0E2524; background: #FFFFFF; }
+    .ss-row + .ss-week { border-top: 1px solid #E4DED4; }
+    .ss-more { align-self: flex-start; height: 44px; padding: 0 18px; border-radius: 22px; border: 1px solid #D9D3C9; background: transparent; color: #0E2524; font: 700 13px 'Manrope', system-ui, sans-serif; cursor: pointer; }
+    .ss-more:hover { border-color: #0E2524; }
+    .ss-jumps { display: flex; flex-wrap: wrap; gap: 6px 22px; margin: 22px 0 8px; padding-top: 18px; border-top: 1px solid #1E4A47; }
+    .cr .ss-jumps a { color: #C9D6D4; font-size: 13px; font-weight: 700; text-decoration: none; }
+    .cr .ss-jumps a:hover { color: #E7755C; }
+    .cr-section[id] { scroll-margin-top: 16px; }
     .ss-list { background: #FFFFFF; border: 1px solid #E4DED4; border-radius: 16px; overflow: hidden; }
     .ss-day { display: flex; justify-content: space-between; gap: 12px; padding: 12px 20px; background: #F6EEE2; font-size: 13px; font-weight: 800; }
     .ss-day + .ss-row, .ss-row + .ss-row, .ss-row + .ss-day { border-top: 1px solid #F1ECE4; }
@@ -2182,7 +2190,8 @@
     // What is going out on social, the homes being pushed, Rightmove Finest
     // National and flagged homes, filtered by office (partners show under All offices).
     var ssData = null, ssMeta = null;
-    var ssState = { office: 'All offices', flag: '' };
+    var ssState = { office: 'All offices', flag: '', showLater: false, allNational: false };
+    var SS_SOON_DAYS = 14, SS_NATIONAL_SHOWN = 10;
     var SS_MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     var SS_DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     var SS_PLATFORMS = {
@@ -2226,7 +2235,7 @@
 
     function displayStaffSchedule(data, meta) {
       ssData = data; ssMeta = meta || {};
-      ssState = { office: 'All offices', flag: '' };
+      ssState = { office: 'All offices', flag: '', showLater: false, allNational: false };
       document.body.classList.add('client-report');
       document.title = 'Social schedule · Finest';
       var container = document.querySelector('.container');
@@ -2235,6 +2244,9 @@
     }
     function ssSetOffice(office) { ssState.office = office; ssRender(); }
     function ssToggleFlag(flag) { ssState.flag = ssState.flag === flag ? '' : flag; ssRender(); }
+    function ssShowLater() { ssState.showLater = !ssState.showLater; ssRender(); }
+    function ssShowNational() { ssState.allNational = !ssState.allNational; ssRender(); }
+    function ssJump(id) { var el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
 
     function ssRender() {
       var d = ssData, today = ssToday(), all = ssState.office === 'All offices';
@@ -2270,7 +2282,11 @@
       var flags = flagOrder.map(function(f) { return { key: f[0], label: f[1], meaning: f[2], rows: (groups[f[0]] || []).filter(ssInOffice) }; })
         .filter(function(f) { return f.key !== 'No PR' || f.rows.length; });
       var flagTotal = flags.reduce(function(sum, f) { return sum + f.rows.length; }, 0);
-      var national = (d.londonProperties || []).filter(function(n) { return !n.londonRequiresRemoval && ssInOffice(n); });
+      // Finest offices first (in filter order), then partners A to Z.
+      var officeRank = function(n) { var i = (d.offices || []).indexOf(n.office); return i === -1 ? 100 : i; };
+      var national = (d.londonProperties || []).filter(function(n) { return !n.londonRequiresRemoval && ssInOffice(n); }).sort(function(a, b) {
+        return (officeRank(a) - officeRank(b)) || String(a.agent || '').localeCompare(String(b.agent || '')) || String(a.propertyName || '').localeCompare(String(b.propertyName || ''), 'en', { numeric: true });
+      });
 
       var pushStatus = function(p) {
         var booked = p.scheduled && ssParseDate(p.scheduled.day);
@@ -2303,7 +2319,15 @@
       ['All offices'].concat(d.offices || []).forEach(function(o) {
         html += '<button type="button" class="ms-office' + (o === ssState.office ? ' on' : '') + '" onclick="ssSetOffice(' + crEsc(JSON.stringify(o)) + ')">' + crEsc(o) + '</button>';
       });
-      html += '</div></div></header><main class="cr-wrap cr-main">';
+      html += '</div>';
+      var jumps = [['ss-coming', 'Coming up']];
+      if (push.length) jumps.push(['ss-push', 'Homes we’re pushing']);
+      if (national.length) jumps.push(['ss-national', 'Rightmove Finest National']);
+      if (flagTotal) jumps.push(['ss-flags', 'Flagged homes']);
+      html += '<nav class="ss-jumps" aria-label="Sections">' + jumps.map(function(j) {
+        return '<a href="#' + j[0] + '" onclick="ssJump(\'' + j[0] + '\'); return false;">' + crEsc(j[1]) + '</a>';
+      }).join('') + '</nav>';
+      html += '</div></header><main class="cr-wrap cr-main">';
 
       // At a glance
       html += '<section class="cr-section"><div class="cr-kpis ss-kpis">';
@@ -2316,9 +2340,23 @@
       html += '</div></section>';
 
       // Coming up
-      html += '<section class="cr-section"><h2 class="cr-h2">Coming up</h2><div class="ss-list">';
+      html += '<section class="cr-section" id="ss-coming"><h2 class="cr-h2">Coming up</h2><div class="ss-list">';
       if (!days.length) html += '<div class="ss-empty">Nothing is planned' + (all ? '' : ' for ' + crEsc(displayOffice(ssState.office)) + ' homes') + ' yet.</div>';
-      days.forEach(function(day) {
+      // Weeks run Monday to Sunday. The next 14 days show first; later posts on request.
+      var weekStart = function(dt) { var x = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate()); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return x.getTime(); };
+      var thisWeek = weekStart(today), nextWeek = weekStart(new Date(today.getFullYear(), today.getMonth(), today.getDate() + 7));
+      var soonEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate() + SS_SOON_DAYS - 1);
+      var soonDays = days.filter(function(day) { return day.date <= soonEnd; });
+      var laterCount = days.filter(function(day) { return day.date > soonEnd; }).reduce(function(sum, day) { return sum + day.posts.length; }, 0);
+      var shownDays = ssState.showLater || !soonDays.length ? days : soonDays;
+      var lastWeek = null;
+      shownDays.forEach(function(day) {
+        var wk = weekStart(day.date);
+        var weekLabel = wk === thisWeek ? 'This week' : wk === nextWeek ? 'Next week' : 'Later';
+        if (weekLabel !== lastWeek) {
+          html += '<div class="ss-week">' + weekLabel + '</div>';
+          lastWeek = weekLabel;
+        }
         var diff = Math.round((day.date - today) / 86400000);
         var label = (diff === 0 ? 'Today · ' : diff === 1 ? 'Tomorrow · ' : '') + SS_DAYS[day.date.getDay()] + ' ' + day.date.getDate() + ' ' + SS_MONTHS[day.date.getMonth()];
         html += '<div class="ss-day"><span>' + crEsc(label) + '</span><span>' + day.posts.length + (day.posts.length === 1 ? ' post' : ' posts') + '</span></div>';
@@ -2335,11 +2373,15 @@
           html += '</div>';
         });
       });
-      html += '</div></section>';
+      html += '</div>';
+      if (laterCount && soonDays.length) {
+        html += '<button type="button" class="ss-more" onclick="ssShowLater()">' + (ssState.showLater ? 'Show the next two weeks only' : 'Show later posts (' + laterCount + ')') + '</button>';
+      }
+      html += '</section>';
 
       // Homes we're pushing
       if (push.length) {
-        html += '<section class="cr-section"><div><h2 class="cr-h2">Homes we’re pushing</h2>';
+        html += '<section class="cr-section" id="ss-push"><div><h2 class="cr-h2">Homes we’re pushing</h2>';
         html += '<p class="cr-muted" style="margin:6px 0 0;">Finest homes getting extra social support. Homes needing a post come first; booked homes are at the bottom.</p></div><div class="ss-list">';
         html += '<div class="ss-row push head"><span>Home</span><span>Price</span><span>Office</span><span>On the market</span><span>Last social post</span><span>Status</span></div>';
         push.forEach(function(x) {
@@ -2358,20 +2400,25 @@
 
       // Rightmove Finest National
       if (national.length) {
-        html += '<section class="cr-section"><div><h2 class="cr-h2">Rightmove Finest National</h2>';
+        html += '<section class="cr-section" id="ss-national"><div><h2 class="cr-h2">Rightmove Finest National</h2>';
         html += '<p class="cr-muted" style="margin:6px 0 0;">Homes live on our Rightmove Finest National profile.</p></div><div class="ss-list">';
-        national.forEach(function(n) {
+        var nationalShown = ssState.allNational ? national : national.slice(0, SS_NATIONAL_SHOWN);
+        nationalShown.forEach(function(n) {
           var added = ssParseDate(n.londonAddedDate);
           html += '<div class="ss-row nat"><span class="ss-homes">' + ssHome(n.propertyName || n.propertyId, n.propertyUrl) + '</span>' + ssOfficeCell(n);
           html += '<span class="ss-small">' + crEsc(n.status || '') + '</span><span class="ss-small num">' + crEsc(n.priceDisplay || '') + '</span>';
           html += '<span class="ss-muted">' + (added ? 'Added ' + crEsc(ssShort(added)) : '') + '</span></div>';
         });
-        html += '</div></section>';
+        html += '</div>';
+        if (national.length > SS_NATIONAL_SHOWN) {
+          html += '<button type="button" class="ss-more" onclick="ssShowNational()">' + (ssState.allNational ? 'Show fewer' : 'Show all ' + national.length + ' homes') + '</button>';
+        }
+        html += '</section>';
       }
 
       // Flagged homes
       if (flagTotal) {
-        html += '<section class="cr-section"><div><h2 class="cr-h2">Flagged homes</h2>';
+        html += '<section class="cr-section" id="ss-flags"><div><h2 class="cr-h2">Flagged homes</h2>';
         html += '<p class="cr-muted" style="margin:6px 0 0;">Flagged homes get no social posts, and some no PR either. Please check your homes here are still right, so nothing misses out. Tap a group to see its homes.</p></div>';
         html += '<div class="ss-flags">';
         flags.forEach(function(f) {
