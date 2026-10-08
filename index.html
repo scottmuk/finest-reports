@@ -2286,7 +2286,7 @@
 
       var pushStatus = function(p) {
         var booked = p.scheduled && ssParseDate(p.scheduled.day);
-        if (booked && booked >= today) return { label: 'Booked, ' + SS_DAYS[booked.getDay()].slice(0, 3) + ' ' + ssShort(booked), bg: '#E3F1EA', fg: '#1F6B45', rank: 5 };
+        if (booked && booked >= today) return { label: 'Scheduled, ' + SS_DAYS[booked.getDay()].slice(0, 3) + ' ' + ssShort(booked), bg: '#E3F1EA', fg: '#1F6B45', rank: 5 };
         var u = String(p.urgency || '').toLowerCase();
         if (u.indexOf('never') !== -1) return { label: 'Never featured', bg: '#FBEFE9', fg: '#993C1D', rank: 0 };
         if (u.indexOf('overdue') !== -1) return { label: 'Overdue', bg: '#FBEFE9', fg: '#993C1D', rank: 1 };
@@ -2322,7 +2322,7 @@
       html += '<section class="cr-section"><div class="cr-kpis ss-kpis">';
       [['Posts planned', total, lastDay ? 'To ' + ssShort(lastDay) : 'Nothing planned yet'],
        ['Next 7 days', week, 'To ' + SS_DAYS[weekEnd.getDay()] + ' ' + ssShort(weekEnd)],
-       ['Homes being pushed', push.length, push.length ? unbooked + ' not yet booked' : 'None right now'],
+       ['Homes being pushed', push.length, push.length ? unbooked + ' not yet scheduled' : 'None right now'],
        ['Flagged homes', flagTotal, 'No social posts and/or PR']].forEach(function(k) {
         html += '<div class="cr-kpi"><span class="cr-kpi-label">' + crEsc(k[0]) + '</span><span class="cr-kpi-value num">' + k[1] + '</span><span class="cr-kpi-note">' + crEsc(k[2]) + '</span></div>';
       });
@@ -2371,7 +2371,7 @@
       // Homes we're pushing
       if (push.length) {
         html += '<section class="cr-section" id="ss-push"><div><h2 class="cr-h2">Homes we’re pushing</h2>';
-        html += '<p class="cr-muted" style="margin:6px 0 0;">Finest homes getting extra social support. Homes needing a post come first; booked homes are at the bottom.</p></div><div class="ss-list">';
+        html += '<p class="cr-muted" style="margin:6px 0 0;">Finest homes getting extra social support. Homes needing a post come first; scheduled homes are at the bottom.</p></div><div class="ss-list">';
         html += '<div class="ss-row push head"><span>Home</span><span>Price</span><span>Office</span><span>On the market</span><span>Last social post</span><span>Status</span></div>';
         push.forEach(function(x) {
           var p = x.p, last = p.lastSocial, lastDate = last ? ssParseDate(last.dateISO) : ssParseDate(p.lastFacebook);
