@@ -2022,15 +2022,28 @@
       // Places and returning visitors
       if (report.places || report.returning) {
         html += '<section class="cr-grid two">';
-        if (report.places && ((report.places.cities && report.places.cities.length) || report.places.countryCount > 1)) {
-          var placeCities = report.places.cities || [];
-          var maxCity = Math.max.apply(null, placeCities.map(function(c) { return c.share || 0; }).concat([1]));
+        var pl = report.places;
+        if (pl && typeof pl.london === 'number') {
+          // London, the local area, the rest of the UK and overseas: shares of all viewers.
+          var hasLocal = typeof pl.local === 'number';
+          var rowsP = [['London', pl.london, '#002A29', ''], hasLocal ? ['Local area', pl.local, '#E7755C', pl.localTowns ? pl.localTowns + ' and nearby' : ''] : null,
+            ['Rest of the UK', pl.uk, '#5E8A86', ''], ['Overseas', pl.overseas, '#B9AE9C', '']].filter(function(x) { return x && x[1] > 0; });
           html += '<div class="cr-section"><h2 class="cr-h2">Where viewers are based</h2>';
-          if (report.places.countryCount > 1) html += '<span class="cr-muted">People in <strong>' + report.places.countryCount + ' countries</strong> have looked at your home.' + (placeCities.length ? ' Share of all viewers by city:' : '') + '</span>';
+          var lead = pl.london >= 10 ? 'London buyers make up <strong>' + pl.london + '%</strong> of viewers' : 'Viewers by where they are based';
+          html += '<span class="cr-muted">' + lead + (pl.countryCount > 1 ? ', from <strong>' + pl.countryCount + ' countries</strong> in all.' : '.') + '</span>';
+          rowsP.forEach(function(r) {
+            html += '<div class="cr-bar-row"><div class="cr-bar-top"><span style="font-weight:600;">' + crEsc(r[0]) + (r[3] ? ' <span class="cr-muted" style="font-weight:400;">· ' + crEsc(r[3]) + '</span>' : '') + '</span><span class="num" style="font-weight:700;">' + r[1] + '%</span></div>';
+            html += '<div class="cr-bar"><div style="width:' + Math.min(100, r[1]) + '%; background:' + r[2] + ';"></div></div></div>';
+          });
+          html += '</div>';
+        } else if (pl && ((pl.cities && pl.cities.length) || pl.countryCount > 1)) {
+          // Older links: top cities only. Bars are true shares of all viewers, not scaled to the top city.
+          var placeCities = pl.cities || [];
+          html += '<div class="cr-section"><h2 class="cr-h2">Where viewers are based</h2>';
+          if (pl.countryCount > 1) html += '<span class="cr-muted">People in <strong>' + pl.countryCount + ' countries</strong> have looked at your home.' + (placeCities.length ? ' Share of all viewers by city:' : '') + '</span>';
           placeCities.forEach(function(c) {
-            var amount = c.share + '%';
-            html += '<div class="cr-bar-row"><div class="cr-bar-top"><span style="font-weight:600;">' + crEsc(c.name) + '</span><span class="num" style="font-weight:700;">' + amount + '</span></div>';
-            html += '<div class="cr-bar"><div style="width:' + Math.round((c.share || 0) / maxCity * 100) + '%; background:#2F6461;"></div></div></div>';
+            html += '<div class="cr-bar-row"><div class="cr-bar-top"><span style="font-weight:600;">' + crEsc(c.name) + '</span><span class="num" style="font-weight:700;">' + c.share + '%</span></div>';
+            html += '<div class="cr-bar"><div style="width:' + Math.min(100, c.share || 0) + '%; background:#2F6461;"></div></div></div>';
           });
           html += '</div>';
         }
