@@ -1973,9 +1973,9 @@
       if (report.social && report.social.items && report.social.items.length) {
         var posts = report.social.items;
         html += '<section class="cr-section"><div class="cr-section-head"><h2 class="cr-h2">Shared with our audience</h2>';
-        if (report.social.reach) html += '<span class="cr-muted"><strong class="num">' + Number(report.social.reach).toLocaleString('en-GB') + '</strong> combined reach across ' + posts.length + (posts.length === 1 ? ' post' : ' posts') + '</span>';
+        if (report.social.reach) html += '<span class="cr-muted"><strong class="num">' + Number(report.social.reach).toLocaleString('en-GB') + '</strong> combined views across ' + posts.length + (posts.length === 1 ? ' post' : ' posts') + '</span>';
         html += '</div><div class="cr-posts">';
-        html += '<div class="cr-posts-head"><span>Platform</span><span>Date</span><span>Post</span><span class="cr-r">Reach</span><span class="cr-r">Interactions</span><span></span></div>';
+        html += '<div class="cr-posts-head"><span>Platform</span><span>Date</span><span>Post</span><span class="cr-r">Views</span><span class="cr-r">Interactions</span><span></span></div>';
         posts.forEach(function(s, idx) {
           var link = crSafeUrl(s.link);
           var figs = crPostFigures(s);
@@ -1986,7 +1986,7 @@
           html += '<span class="cr-post-date num">' + crEsc(s.date || '') + '</span>';
           // Long captions end in "…" (CSS ellipsis); the full caption shows on hover.
           html += '<span class="cr-post-text" title="' + crEsc(text) + '">' + crEsc(text) + '</span>';
-          html += '<span class="cr-post-fig reach num' + (figs.reach ? '' : ' empty') + '">' + (figs.reach ? crEsc(figs.reach) + '<span class="cr-m-label"> reach</span>' : '–') + '</span>';
+          html += '<span class="cr-post-fig reach num' + (figs.reach ? '' : ' empty') + '">' + (figs.reach ? crEsc(figs.reach) + '<span class="cr-m-label"> views</span>' : '–') + '</span>';
           html += '<span class="cr-post-fig inter num' + (figs.inter ? '' : ' empty') + '">' + (figs.inter ? crEsc(figs.inter) + '<span class="cr-m-label"> interactions</span>' : '–') + '</span>';
           html += link ? '<a class="cr-post-link" href="' + crEsc(link) + '" target="_blank" rel="noopener">View →</a>' : '<span></span>';
           html += '</div>';
@@ -2104,7 +2104,7 @@
       var reachText = '';
       (post.stats || []).forEach(function(st) {
         var label = String(st.label || '').toLowerCase();
-        if (label === 'reach' || (label === 'views' && !reachText)) reachText = st.value;
+        if (label === 'views' || (label === 'reach' && !reachText)) reachText = st.value;
         if (label.indexOf('visits') === 0) visits = crStatNumber(st.value);
         if (!post.interN && /^(likes|reactions|saves|shares|comments)$/.test(label)) inter += crStatNumber(st.value);
       });
@@ -2750,7 +2750,7 @@
         names.forEach(function(n) {
           var p = platforms[n];
           html += '<div class="cr-card ms-tile">' + msBadge(p.key, n) + '<span class="num ms-tile-big">' + p.posts + ' <small>' + (p.posts === 1 ? 'post' : 'posts') + '</small></span>';
-          html += '<span class="cr-muted" style="font-size:13px;">' + (p.reach ? crCompactNumber(p.reach) + ' combined reach · ' + crCompactNumber(p.inter) + ' interactions' : 'Shared with our followers') + '</span></div>';
+          html += '<span class="cr-muted" style="font-size:13px;">' + (p.reach ? crCompactNumber(p.reach) + ' combined views · ' + crCompactNumber(p.inter) + ' interactions' : 'Shared with our followers') + '</span></div>';
         });
         html += '</div>';
 
@@ -2775,7 +2775,7 @@
         html += '</section>';
       }
 
-      html += '<footer class="cr-footer" style="flex-direction:column; gap:8px;"><span><strong style="color:#0E2524;">What the figures mean:</strong> <strong>Views</strong> = times a property page was opened. <strong>People</strong> = individual visitors. <strong>Reach</strong> = people who saw a social post, as reported by each platform. <strong>Interactions</strong> = likes or reactions, comments, shares and saves.</span>';
+      html += '<footer class="cr-footer" style="flex-direction:column; gap:8px;"><span><strong style="color:#0E2524;">What the figures mean:</strong> <strong>Views</strong> = times a property page was opened, or times a social post was seen, as reported by each platform. <strong>People</strong> = individual visitors. <strong>Interactions</strong> = likes or reactions, comments, shares and saves.</span>';
       html += '<span>' + crEsc(r.sourceNote || '') + '</span></footer>';
       html += '</main></div>';
 
@@ -2785,7 +2785,7 @@
     }
 
     function msPostTable(list) {
-      var html = '<div class="cr-posts"><div class="cr-posts-head"><span>Platform</span><span>Date</span><span>Property</span><span class="cr-r">Reach</span><span class="cr-r">Interactions</span><span></span></div>';
+      var html = '<div class="cr-posts"><div class="cr-posts-head"><span>Platform</span><span>Date</span><span>Property</span><span class="cr-r">Views</span><span class="cr-r">Interactions</span><span></span></div>';
       list.forEach(function(p) {
         var link = crSafeUrl(p.link);
         html += '<div class="cr-post-row">' + msBadge(p.key, p.platform) + '<span class="cr-post-date num">' + crEsc(p.date) + '</span>';
