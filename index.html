@@ -552,6 +552,15 @@
     .sc-who select, .sc-who input, .sc-form select, .sc-form input, .sc-form textarea { font: 600 14px 'Manrope', system-ui, sans-serif; color: #0E2524; border: 1px solid #D5CCBE; border-radius: 10px; padding: 9px 12px; background: #FBF9F5; }
     .sc-home { display: grid; grid-template-columns: minmax(0, 1fr) 130px auto; gap: 14px; align-items: center; padding: 14px 0; border-top: 1px solid #EFE8DC; }
     .sc-since { display: flex; flex-direction: column; font-size: 13px; color: #5B6B69; } .sc-since b { font-size: 14px; color: #0E2524; }
+    .sc-group { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin-top: 22px; padding: 10px 14px; border-radius: 12px; background: #F6EEE2; }
+    .sc-group b { font-size: 15px; color: #0E2524; } .sc-group span { font-size: 13px; color: #5B6B69; font-weight: 700; } .sc-group em { flex-basis: 100%; font-style: normal; font-size: 13px; color: #3D5652; }
+    .sc-means { margin: 0; font-size: 13px; color: #3D5652; background: #FFFFFF; border: 1px solid #EFE8DC; border-radius: 10px; padding: 8px 12px; }
+    .sc-tip { position: relative; outline: none; }
+    .sc-tip[data-tip]::after { content: attr(data-tip); position: absolute; left: 0; bottom: calc(100% + 10px); width: 240px; padding: 10px 12px; border-radius: 12px; background: #0B3D3A; color: #F3EFE8; font: 500 12.5px/1.45 'Manrope', system-ui, sans-serif; text-transform: none; letter-spacing: 0; text-align: left; white-space: normal; box-shadow: 0 14px 30px rgba(11,61,58,0.28); opacity: 0; transform: translateY(4px); pointer-events: none; transition: opacity .12s ease, transform .12s ease; z-index: 20; }
+    .sc-tip[data-tip]::before { content: ''; position: absolute; left: 18px; bottom: calc(100% + 4px); width: 10px; height: 10px; background: #0B3D3A; transform: rotate(45deg); opacity: 0; pointer-events: none; transition: opacity .12s ease; z-index: 21; }
+    .sc-tip[data-tip]::after, .sc-tip[data-tip]::before { display: none; }
+    .sc-tip[data-tip]:hover::after, .sc-tip[data-tip]:focus::after { display: block; opacity: 1; transform: none; } .sc-tip[data-tip]:hover::before, .sc-tip[data-tip]:focus::before { display: block; opacity: 1; }
+    .sc-opts .sc-tip[data-tip]:nth-last-child(-n+3)::after { left: auto; right: 0; } .sc-opts .sc-tip[data-tip]:nth-last-child(-n+3)::before { left: auto; right: 18px; }
     .sc-colhead { display: grid; grid-template-columns: minmax(0, 1fr) 130px 260px; gap: 14px; padding: 12px 0 6px; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #5B6B69; }
     .sc-home b { font-size: 15px; color: #0E2524; } .sc-meta { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; margin-top: 5px; font-size: 13px; color: #5B6B69; }
     .sc-note { font-style: italic; color: #3D5652; }
@@ -2280,6 +2289,16 @@
     // seconds. Marketing applies them (or approves the bigger changes).
     var scState = { name: '', other: false, answers: [], open: '', form: {}, busy: false, timer: null };
     var SC_FLAGS = ['On Hold', 'Private', 'Active Interest', 'No Social', 'No PR'];
+    var SC_MEANS = {
+      'On Hold': 'Paused: no social posts and no PR, usually at the vendor’s request.',
+      'Private': 'Marketed privately: no social posts and no PR.',
+      'Active Interest': 'Already has strong interest, so no social posts or PR for now.',
+      'No Social': 'No social posts, but PR is fine.',
+      'No PR': 'No PR, but social posts are fine.',
+      'fine': 'Takes the flag off: the home can have social posts and PR again.',
+      'keep': 'Leaves the flag as it is and saves your note for marketing.'
+    };
+    function scTip(key) { var t = SC_MEANS[key]; return t ? ' data-tip="' + crEsc(t) + '"' : ''; }
     function scStart() {
       try { scState.name = localStorage.getItem('finest-staff-name') || ''; } catch (e) {}
       scLoadAnswers();
@@ -2354,7 +2373,12 @@
       var answer = f.flag === 'fine' && !f.status && !f.price.trim() ? 'fine' : (f.flag === 'keep' && !f.status && !f.price.trim() ? 'still' : 'change');
       scSend({ propertyId: pid, answer: answer, newFlag: f.flag === 'keep' ? '' : f.flag, status: f.status, price: f.price.trim(), note: f.note.trim() }, btn);
     }
-    function scPick(flag) { scState.form.flag = scState.form.flag === flag ? '' : flag; var root = document.getElementById('sc-form-' + scState.open); if (root) root.querySelectorAll('.sc-o').forEach(function(b) { b.classList.toggle('on', b.getAttribute('data-f') === scState.form.flag); }); }
+    function scPick(flag) {
+      scState.form.flag = scState.form.flag === flag ? '' : flag;
+      var root = document.getElementById('sc-form-' + scState.open);
+      if (root) root.querySelectorAll('.sc-o').forEach(function(b) { b.classList.toggle('on', b.getAttribute('data-f') === scState.form.flag); });
+      var m = document.getElementById('sc-means'); if (m) m.textContent = SC_MEANS[scState.form.flag] || 'Hover or tap an option to see what it means.';
+    }
 
     function scSection() {
       var sc = scCheck();
@@ -2394,10 +2418,20 @@
         html += '</div>';
       }
       html += '<div class="sc-colhead"><span>Home</span><span>Flagged since</span><span></span></div>';
-      items.forEach(function(it) {
+      var order = SC_FLAGS.concat(items.map(function(it) { return it.flag; }).filter(function(f, i, arr) { return SC_FLAGS.indexOf(f) === -1 && arr.indexOf(f) === i; }));
+      var grouped = [];
+      order.forEach(function(f) {
+        var g = items.filter(function(it) { return it.flag === f; });
+        if (!g.length) return;
+        var done = g.filter(function(it) { return latest[it.propertyId]; }).length;
+        grouped.push({ head: '<div class="sc-group"><b>' + crEsc(f) + '</b><span>' + g.length + (g.length === 1 ? ' home' : ' homes') + (done ? ' · ' + done + ' checked' : '') + '</span><em>' + crEsc(SC_MEANS[f] || '') + '</em></div>' });
+        g.forEach(function(it) { grouped.push(it); });
+      });
+      grouped.forEach(function(it) {
+        if (it.head) { html += it.head; return; }
         var a = latest[it.propertyId], open = scState.open === it.propertyId && !closed;
         var daysN = it.days != null ? it.days : ((String(it.reason || '').match(/(\d+) days/) || [])[1]);
-        html += '<div class="sc-home' + (a ? ' answered' : '') + '"><div class="sc-main"><b>' + ssHome(it.propertyName || it.propertyId, it.url) + '</b><div class="sc-meta"><span class="sc-fl">' + crEsc(it.flag) + '</span>';
+        html += '<div class="sc-home' + (a ? ' answered' : '') + '"><div class="sc-main"><b>' + ssHome(it.propertyName || it.propertyId, it.url) + '</b><div class="sc-meta"><span class="sc-fl sc-tip" tabindex="0"' + scTip(it.flag) + '>' + crEsc(it.flag) + '</span>';
         if (it.note) html += '<span class="sc-note">“' + crEsc(it.note) + '”</span>';
         if (a) html += '<span class="' + (a.answer === 'change' ? 'sc-wait' : 'sc-done') + '">✓ ' + crEsc(scDescribe(a, it.flag)) + ' · ' + crEsc(a.name) + ', ' + crEsc(scAgo(a.at)) + '</span>';
         html += '</div></div><div class="sc-since">' + (it.setDate ? '<span>' + crEsc(scDate(it.setDate)) + '</span>' : '<span>—</span>') + (daysN ? '<b>' + crEsc(String(daysN)) + ' days</b>' : '') + '</div>';
@@ -2410,9 +2444,9 @@
           var pid = crEsc(JSON.stringify(it.propertyId));
           html += '<div class="sc-form" id="sc-form-' + crEsc(it.propertyId) + '"><label>What should it be?</label><div class="sc-opts">';
           [['fine', 'Fine to post now (remove the flag)'], ['keep', 'Keep ' + it.flag + ', just update the note']].concat(SC_FLAGS.filter(function(f) { return f !== it.flag; }).map(function(f) { return [f, f]; })).forEach(function(o) {
-            html += '<button type="button" class="sc-o' + (scState.form.flag === o[0] ? ' on' : '') + '" data-f="' + crEsc(o[0]) + '" onclick="scPick(' + crEsc(JSON.stringify(o[0])) + ')">' + crEsc(o[1]) + '</button>';
+            html += '<button type="button" class="sc-o sc-tip' + (scState.form.flag === o[0] ? ' on' : '') + '" data-f="' + crEsc(o[0]) + '"' + scTip(o[0]) + ' onclick="scPick(' + crEsc(JSON.stringify(o[0])) + ')">' + crEsc(o[1]) + '</button>';
           });
-          html += '</div><label>Anything else wrong? (optional)</label><div class="sc-two"><select data-k="status"><option value="">Status: ' + crEsc(it.status || 'as now') + ' (no change)</option>';
+          html += '</div><p class="sc-means" id="sc-means">' + crEsc(SC_MEANS[scState.form.flag] || 'Hover or tap an option to see what it means.') + '</p><label>Anything else wrong? (optional)</label><div class="sc-two"><select data-k="status"><option value="">Status: ' + crEsc(it.status || 'as now') + ' (no change)</option>';
           ['For Sale', 'Sale Agreed', 'Sold', 'Withdrawn'].filter(function(x) { return x !== it.status; }).forEach(function(x) { html += '<option>' + x + '</option>'; });
           html += '</select><input data-k="price" type="text" placeholder="New price, if it’s changed (now ' + crEsc(it.price || '—') + ')"></div>';
           html += '<textarea data-k="note" rows="2" placeholder="Note for marketing (optional)"></textarea>';
