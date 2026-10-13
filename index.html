@@ -552,6 +552,7 @@
     .sc-who select, .sc-who input, .sc-form select, .sc-form input, .sc-form textarea { font: 600 14px 'Manrope', system-ui, sans-serif; color: #0E2524; border: 1px solid #D5CCBE; border-radius: 10px; padding: 9px 12px; background: #FBF9F5; }
     .sc-home { display: grid; grid-template-columns: minmax(0, 1fr) 130px auto; gap: 14px; align-items: center; padding: 14px 0; border-top: 1px solid #EFE8DC; }
     .sc-since { display: flex; flex-direction: column; font-size: 13px; color: #5B6B69; } .sc-since b { font-size: 14px; color: #0E2524; }
+    .sc-test { margin-bottom: 12px; padding: 10px 14px; border-radius: 12px; background: #FDF1D8; color: #7A5410; font-size: 14px; font-weight: 700; }
     .sc-group { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin-top: 22px; padding: 10px 14px; border-radius: 12px; background: #F6EEE2; }
     .sc-group b { font-size: 15px; color: #0E2524; } .sc-group span { font-size: 13px; color: #5B6B69; font-weight: 700; } .sc-group em { flex-basis: 100%; font-style: normal; font-size: 13px; color: #3D5652; }
     .sc-means { margin: 0; font-size: 13px; color: #3D5652; background: #FFFFFF; border: 1px solid #EFE8DC; border-radius: 10px; padding: 8px 12px; }
@@ -2288,6 +2289,9 @@
     // Each answer saves as it's tapped; colleagues' answers appear within
     // seconds. Marketing applies them (or approves the bigger changes).
     var scState = { name: '', other: false, answers: [], open: '', form: {}, busy: false, timer: null };
+    // Test mode (&test=1 on the link): everything works, nothing is saved.
+    var SC_TEST = /[?&]test=1(&|$)/.test(window.location.search);
+    function scLocalOnly() { return !!window.PREVIEW_REPORT || SC_TEST; }
     var SC_FLAGS = ['On Hold', 'Private', 'Active Interest', 'No Social', 'No PR'];
     var SC_MEANS = {
       'On Hold': 'Paused: no social posts and no PR, usually at the vendor’s request.',
@@ -2302,12 +2306,12 @@
     function scStart() {
       try { scState.name = localStorage.getItem('finest-staff-name') || ''; } catch (e) {}
       scLoadAnswers();
-      if (!window.PREVIEW_REPORT && !scState.timer) scState.timer = setInterval(function() { if (!document.hidden) scLoadAnswers(); }, 15000);
+      if (!scLocalOnly() && !scState.timer) scState.timer = setInterval(function() { if (!document.hidden) scLoadAnswers(); }, 15000);
     }
     function scCheck() { return ssData && ssData.staffCheck; }
     function scClosed() { var d = new Date(scCheck().due); return !isNaN(d) && d < new Date(); }
     function scLoadAnswers() {
-      if (window.PREVIEW_REPORT) return;
+      if (scLocalOnly()) return;
       var done = function(r) {
         if (!r || !r.success) return;
         scState.answers = r.answers || [];
@@ -2360,7 +2364,7 @@
         scState.answers = r.answers || scState.answers; scState.open = '';
         ssRender();
       };
-      if (window.PREVIEW_REPORT) { scState.answers.push({ propertyId: payload.propertyId, name: payload.name, answer: payload.answer, newFlag: payload.newFlag || '', status: payload.status || '', price: payload.price || '', note: payload.note || '', at: new Date().toISOString() }); done({ success: true, answers: scState.answers }); return; }
+      if (scLocalOnly()) { scState.answers.push({ propertyId: payload.propertyId, name: payload.name, answer: payload.answer, newFlag: payload.newFlag || '', status: payload.status || '', price: payload.price || '', note: payload.note || '', at: new Date().toISOString() }); done({ success: true, answers: scState.answers }); return; }
       if (window.google && google.script && google.script.run) { google.script.run.withSuccessHandler(done).withFailureHandler(function() { fail(); }).saveStaffCheckAnswer(payload); return; }
       fetch(REPORT_DATA_URL, { method: 'POST', body: JSON.stringify(payload), credentials: 'omit', redirect: 'follow' })
         .then(function(r) { return r.json(); }).then(done).catch(function() { fail(); });
@@ -2385,7 +2389,7 @@
       if (!sc || !sc.items || !sc.items.length) return '';
       var latest = scLatest(), closed = scClosed(), due = new Date(sc.due);
       var dueLabel = isNaN(due) ? '' : SS_DAYS[due.getDay()].slice(0, 3) + ' ' + due.getDate() + ' ' + SS_MONTHS[due.getMonth()].slice(0, 3);
-      var html = '<section class="cr-section" id="sc-check"><div class="sc-box">';
+      var html = '<section class="cr-section" id="sc-check">' + (SC_TEST ? '<div class="sc-test">Test mode: nothing you do here is saved. Remove “&amp;test=1” from the link to answer for real.</div>' : '') + '<div class="sc-box">';
       if (ssState.office === 'All offices') {
         html += '<div class="sc-head"><div><h2 class="cr-h2">Check your homes</h2><p class="cr-muted" style="margin:6px 0 0;">Flagged homes get no social posts (and some no PR). Pick your office to check yours are still right' + (dueLabel ? ', by <b>' + crEsc(dueLabel) + '</b>' : '') + '.</p></div></div><div class="sc-offices">';
         (ssData.offices || []).forEach(function(o) {
