@@ -2288,7 +2288,7 @@
     // ===== Staff check of flagged homes (on the schedule link) =====
     // Each answer saves as it's tapped; colleagues' answers appear within
     // seconds. Marketing applies them (or approves the bigger changes).
-    var scState = { name: '', other: false, answers: [], open: '', form: {}, busy: false, timer: null };
+    var scState = { name: '', other: false, answers: [], open: '', form: {}, busy: false, timer: null, seq: 0, mine: [] };
     // Test mode (&test=1 on the link): everything works, nothing is saved.
     var SC_TEST = /[?&]test=1(&|$)/.test(window.location.search);
     function scLocalOnly() { return !!window.PREVIEW_REPORT || SC_TEST; }
@@ -2310,17 +2310,27 @@
     }
     function scCheck() { return ssData && ssData.staffCheck; }
     function scClosed() { var d = new Date(scCheck().due); return !isNaN(d) && d < new Date(); }
+    // Answers from the server, plus this person's own answers it hasn't
+    // confirmed yet (so a slow or overlapping refresh can't hide them).
+    function scMerge(list) {
+      var key = function(a) { return a.propertyId + '|' + a.name + '|' + a.answer + '|' + (a.newFlag || '') + '|' + (a.note || ''); };
+      var have = {}; (list || []).forEach(function(a) { have[key(a)] = true; });
+      scState.mine = scState.mine.filter(function(a) { return !have[key(a)] && Date.now() - new Date(a.at).getTime() < 5 * 60000; });
+      return (list || []).concat(scState.mine);
+    }
     function scLoadAnswers() {
       if (scLocalOnly()) return;
+      var seq = scState.seq;
       var done = function(r) {
         if (!r || !r.success) return;
-        scState.answers = r.answers || [];
+        if (seq !== scState.seq || scState.busy) return; // a save happened meanwhile: this list is older
+        scState.answers = scMerge(r.answers);
         var a = document.activeElement;
         if (scState.open || (a && /INPUT|TEXTAREA|SELECT/.test(a.tagName))) return; // don't redraw while someone is typing
         ssRender();
       };
       if (window.google && google.script && google.script.run) { google.script.run.withSuccessHandler(done).getStaffCheckAnswers(reportToken); return; }
-      fetch(REPORT_DATA_URL + '?format=json&answers=1&token=' + encodeURIComponent(reportToken), { credentials: 'omit', redirect: 'follow' })
+      fetch(REPORT_DATA_URL + '?format=json&answers=1&token=' + encodeURIComponent(reportToken) + '&_=' + Date.now(), { credentials: 'omit', redirect: 'follow', cache: 'no-store' })
         .then(function(r) { return r.json(); }).then(done).catch(function() {});
     }
     function scLatest() {
@@ -2356,12 +2366,16 @@
       if (scState.busy) return;
       if (!scState.name) { alert('Choose your name first, at the top of the check.'); return; }
       payload.token = reportToken; payload.name = scState.name;
-      scState.busy = true; if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+      scState.busy = true; scState.seq++; if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
       var fail = function(msg) { scState.busy = false; if (btn) { btn.disabled = false; } alert(msg || 'That answer wasn’t saved. Please try again.'); ssRender(); };
       var done = function(r) {
-        scState.busy = false;
+        scState.busy = false; scState.seq++;
         if (!r || !r.success) { fail(r && r.error); return; }
-        scState.answers = r.answers || scState.answers; scState.open = '';
+        var nm = function(x) { return String(x || '').replace(/\s+/g, ' ').trim().slice(0, 60).toLowerCase(); };
+        var saved = (r.answers || []).some(function(a) { return a.propertyId === payload.propertyId && nm(a.name) === nm(payload.name) && a.answer === payload.answer; });
+        if (!saved && !scLocalOnly()) { fail('That answer didn’t reach marketing. Please try again in a moment.'); return; }
+        if (!scLocalOnly()) scState.mine.push({ propertyId: payload.propertyId, name: String(payload.name).replace(/\s+/g, ' ').trim(), answer: payload.answer, newFlag: payload.newFlag || '', status: payload.status || '', price: payload.price || '', note: payload.note || '', at: new Date().toISOString() });
+        scState.answers = scMerge(r.answers || scState.answers); scState.open = '';
         ssRender();
       };
       if (scLocalOnly()) { scState.answers.push({ propertyId: payload.propertyId, name: payload.name, answer: payload.answer, newFlag: payload.newFlag || '', status: payload.status || '', price: payload.price || '', note: payload.note || '', at: new Date().toISOString() }); done({ success: true, answers: scState.answers }); return; }
