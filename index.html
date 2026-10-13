@@ -547,7 +547,9 @@
     .sc-bar { height: 6px; border-radius: 3px; background: #EFE8DC; margin-top: 6px; width: 160px; overflow: hidden; } .sc-bar i { display: block; height: 100%; background: #E7755C; }
     .sc-who { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 14px 0 4px; font-size: 14px; color: #3D5652; }
     .sc-who select, .sc-who input, .sc-form select, .sc-form input, .sc-form textarea { font: 600 14px 'Manrope', system-ui, sans-serif; color: #0E2524; border: 1px solid #D5CCBE; border-radius: 10px; padding: 9px 12px; background: #FBF9F5; }
-    .sc-home { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 14px 0; border-top: 1px solid #EFE8DC; }
+    .sc-home { display: grid; grid-template-columns: minmax(0, 1fr) 130px auto; gap: 14px; align-items: center; padding: 14px 0; border-top: 1px solid #EFE8DC; }
+    .sc-since { display: flex; flex-direction: column; font-size: 13px; color: #5B6B69; } .sc-since b { font-size: 14px; color: #0E2524; }
+    .sc-colhead { display: grid; grid-template-columns: minmax(0, 1fr) 130px 260px; gap: 14px; padding: 12px 0 6px; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #5B6B69; }
     .sc-home b { font-size: 15px; color: #0E2524; } .sc-meta { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; margin-top: 5px; font-size: 13px; color: #5B6B69; }
     .sc-note { font-style: italic; color: #3D5652; }
     .sc-fl { font-size: 11px; font-weight: 800; padding: 3px 9px; border-radius: 10px; background: #F6E1DC; color: #8A2E1A; }
@@ -567,7 +569,7 @@
     .sc-offices { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-top: 14px; }
     .sc-off { text-align: left; padding: 14px 16px; border-radius: 14px; border: 1px solid #E4DED4; background: #FFFFFF; cursor: pointer; font: inherit; color: #0E2524; }
     .sc-off b { display: block; font-size: 15px; } .sc-off span { font-size: 13px; color: #5B6B69; }
-    @media (max-width: 700px) { .sc-home { grid-template-columns: 1fr; } .sc-acts { justify-content: flex-start; } .sc-two { grid-template-columns: 1fr; } }
+    @media (max-width: 700px) { .sc-colhead { display: none; } .sc-since { flex-direction: row; gap: 8px; } .sc-home { grid-template-columns: 1fr; } .sc-acts { justify-content: flex-start; } .sc-two { grid-template-columns: 1fr; } }
     @media (max-width: 860px) {
       .ss-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .ss-row.post { grid-template-columns: 70px minmax(0, 1fr); gap: 6px 12px; }
@@ -699,14 +701,14 @@
     <div class="header">
       <div class="logo">FINEST</div>
       <div class="logo-sub"></div>
-      <h1 class="report-title" id="reportTitle">Your marketing report</h1>
-      <p class="report-subtitle" id="reportSubtitle">Preparing your report</p>
+      <h1 class="report-title" id="reportTitle">Just a moment</h1>
+      <p class="report-subtitle" id="reportSubtitle"></p>
     </div>
 
     <div id="content">
       <div class="loading">
         <div class="loading-spinner"></div>
-        <p id="loadingMessage">Loading your report…</p>
+        <p id="loadingMessage">Loading…</p>
       </div>
     </div>
 
@@ -734,7 +736,7 @@
       // leave a bare spinner. (The element is replaced once the report loads.)
       setTimeout(function() {
         var msg = document.getElementById('loadingMessage');
-        if (msg) msg.textContent = 'Gathering the latest figures for your report. This can take a few seconds…';
+        if (msg) msg.textContent = 'Gathering the latest figures. This can take a few seconds…';
       }, 4000);
       setTimeout(function() {
         var msg = document.getElementById('loadingMessage');
@@ -2317,6 +2319,7 @@
       if (a.price) bits.push('price ' + a.price);
       return 'Change sent: ' + (bits.join(', ') || 'note') + ' · waits for marketing';
     }
+    function scDate(uk) { var d = ssParseDate(uk); return d ? d.getDate() + ' ' + SS_MONTHS[d.getMonth()].slice(0, 3) + ' ' + d.getFullYear() : uk; }
     function scSetName(v) {
       if (v === '__other') { scState.other = true; scState.name = ''; ssRender(); return; }
       scState.name = String(v || '').trim(); scState.other = false;
@@ -2371,13 +2374,16 @@
       if (!items.length) return '';
       var answered = items.filter(function(it) { return latest[it.propertyId]; }).length;
       items = items.slice().sort(function(a, b) { return (latest[a.propertyId] ? 1 : 0) - (latest[b.propertyId] ? 1 : 0); });
-      html += '<div class="sc-head"><div><h2 class="cr-h2">Check your homes</h2><p class="cr-muted" style="margin:6px 0 0; max-width:640px;">These ' + crEsc(displayOffice(ssState.office)) + ' homes are flagged, so they get no social posts (and some no PR). Is each still right?' + (dueLabel ? ' Answers by <b>' + crEsc(dueLabel) + '</b>.' : '') + ' Marketing approves any bigger change.</p></div>';
+      html += '<div class="sc-head"><div><h2 class="cr-h2">' + (ssData.checkOnly ? crEsc(displayOffice(ssState.office)) + ' homes' : 'Check your homes') + '</h2><p class="cr-muted" style="margin:6px 0 0; max-width:640px;">These ' + crEsc(displayOffice(ssState.office)) + ' homes are flagged, so they get no social posts (and some no PR). Is each still right?' + (dueLabel ? ' Answers by <b>' + crEsc(dueLabel) + '</b>.' : '') + ' Marketing approves any bigger change.</p></div>';
       html += '<div class="sc-prog"><b>' + answered + ' of ' + items.length + '</b>checked<div class="sc-bar"><i style="width:' + Math.round(100 * answered / items.length) + '%"></i></div></div></div>';
       if (closed) html += '<p class="cr-muted" style="margin:12px 0 0;"><b>This check closed on ' + crEsc(dueLabel) + '.</b> Thanks to everyone who answered.</p>';
       else {
         var names = (sc.staff && sc.staff[ssState.office]) || [];
         html += '<div class="sc-who">Checking as ';
-        if (scState.other || (scState.name && names.indexOf(scState.name) === -1 && names.length)) html += '<input type="text" placeholder="Your name" value="' + crEsc(scState.name) + '" onchange="scSetName(this.value)" style="min-width:200px">';
+        if (scState.other || (scState.name && names.indexOf(scState.name) === -1 && names.length)) {
+          html += '<input type="text" placeholder="Your name" value="' + crEsc(scState.name) + '" onchange="scSetName(this.value)" style="min-width:200px">';
+          if (names.length) html += '<a href="#" onclick="scState.other=false; scState.name=\'\'; ssRender(); return false;" style="color:#B8462C; font-weight:700;">Choose from the list</a>';
+        }
         else {
           html += '<select onchange="scSetName(this.value)"><option value="">Choose your name…</option>';
           names.forEach(function(n) { html += '<option' + (n === scState.name ? ' selected' : '') + '>' + crEsc(n) + '</option>'; });
@@ -2385,12 +2391,14 @@
         }
         html += '</div>';
       }
+      html += '<div class="sc-colhead"><span>Home</span><span>Flagged since</span><span></span></div>';
       items.forEach(function(it) {
         var a = latest[it.propertyId], open = scState.open === it.propertyId && !closed;
-        html += '<div class="sc-home' + (a ? ' answered' : '') + '"><div><b>' + ssHome(it.propertyName || it.propertyId, it.url) + '</b><div class="sc-meta"><span class="sc-fl">' + crEsc(it.flag) + '</span>';
+        var daysN = it.days != null ? it.days : ((String(it.reason || '').match(/(\d+) days/) || [])[1]);
+        html += '<div class="sc-home' + (a ? ' answered' : '') + '"><div class="sc-main"><b>' + ssHome(it.propertyName || it.propertyId, it.url) + '</b><div class="sc-meta"><span class="sc-fl">' + crEsc(it.flag) + '</span>';
         if (it.note) html += '<span class="sc-note">“' + crEsc(it.note) + '”</span>';
-        html += a ? '<span class="' + (a.answer === 'change' ? 'sc-wait' : 'sc-done') + '">✓ ' + crEsc(scDescribe(a, it.flag)) + ' · ' + crEsc(a.name) + ', ' + crEsc(scAgo(a.at)) + '</span>' : '<span>' + crEsc(it.reason || '') + '</span>';
-        html += '</div></div>';
+        if (a) html += '<span class="' + (a.answer === 'change' ? 'sc-wait' : 'sc-done') + '">✓ ' + crEsc(scDescribe(a, it.flag)) + ' · ' + crEsc(a.name) + ', ' + crEsc(scAgo(a.at)) + '</span>';
+        html += '</div></div><div class="sc-since">' + (it.setDate ? '<span>' + crEsc(scDate(it.setDate)) + '</span>' : '<span>—</span>') + (daysN ? '<b>' + crEsc(String(daysN)) + ' days</b>' : '') + '</div>';
         if (!closed) {
           var dis = scState.name ? '' : ' disabled title="Choose your name first"';
           html += '<div class="sc-acts"><button type="button" class="sc-b' + (a && a.answer === 'still' ? ' ok' : '') + '"' + dis + ' onclick="scStill(' + crEsc(JSON.stringify(it.propertyId)) + ', this)">' + (a && a.answer === 'still' ? '✓ Still right' : 'Still right') + '</button>';
@@ -2419,7 +2427,7 @@
       if (data.staffCheck && data.staffCheck.items && data.staffCheck.items.length) scStart();
       ssState = { office: 'All offices', flag: '', showLater: false, allNational: false };
       document.body.classList.add('client-report');
-      document.title = 'Social schedule · Finest';
+      document.title = (data.checkOnly ? 'Check your flagged homes' : 'Social schedule') + ' · Finest';
       var container = document.querySelector('.container');
       if (container) { container.style.maxWidth = 'none'; container.style.margin = '0'; }
       ssRender();
@@ -2484,16 +2492,17 @@
 
       var html = '<div class="cr">';
       html += '<header class="cr-hero"><div class="cr-wrap">';
-      html += '<div class="cr-top"><div>' + CR_LOGO_SVG + '<div class="cr-logo-sub" style="margin-top:10px;">Social schedule · for Finest sales teams</div></div>';
+      html += '<div class="cr-top"><div>' + CR_LOGO_SVG + '<div class="cr-logo-sub" style="margin-top:10px;">' + (d.checkOnly ? 'Flagged homes check' : 'Social schedule') + ' · for Finest sales teams</div></div>';
       html += '<div class="cr-actions"><button type="button" class="cr-btn" onclick="window.print()">Save as PDF</button></div></div>';
       var expires = ssMeta.expiresAt ? new Date(ssMeta.expiresAt) : null;
       var range = days.length ? days[0].date.getDate() + ' ' + SS_MONTHS[days[0].date.getMonth()] + ' to ' + lastDay.getDate() + ' ' + SS_MONTHS[lastDay.getMonth()] : '';
-      html += '<div class="cr-notice" style="padding:40px 0 20px; max-width:760px;"><h1 class="cr-title">What’s going out</h1>';
-      html += '<p class="cr-headline">' + (all
+      html += '<div class="cr-notice" style="padding:40px 0 20px; max-width:760px;"><h1 class="cr-title">' + (d.checkOnly ? 'Check your flagged homes' : 'What’s going out') + '</h1>';
+      if (d.checkOnly) html += '<p class="cr-headline">Flagged homes get no social posts, and some no PR. Pick your office and check each of your homes is still right.</p>';
+      else html += '<p class="cr-headline">' + (all
         ? 'Our upcoming social posts across every office, the homes getting extra support, what is on Rightmove Finest National, and flagged homes.'
         : 'Upcoming social posts for ' + crEsc(displayOffice(ssState.office)) + ' homes, the homes getting extra support, what is on Rightmove Finest National, and flagged homes.') + '</p>';
       var when = [];
-      if (range) when.push(range);
+      if (range && !d.checkOnly) when.push(range);
       if (expires && !isNaN(expires.getTime())) when.push('link valid until ' + expires.getDate() + ' ' + SS_MONTHS[expires.getMonth()]);
       if (when.length) html += '<p class="cr-logo-sub" style="margin-top:14px; letter-spacing:0.04em; text-transform:none; font-size:13px;">' + crEsc(when.join(' · ')) + '</p>';
       html += '</div><div class="ms-offices" role="group" aria-label="Office">';
@@ -2504,16 +2513,23 @@
       html += '</div></header><main class="cr-wrap cr-main">';
 
       // At a glance
-      html += '<section class="cr-section"><div class="cr-kpis ss-kpis">';
+      if (!d.checkOnly) html += '<section class="cr-section"><div class="cr-kpis ss-kpis">';
       [['Posts planned', total, lastDay ? 'To ' + ssShort(lastDay) : 'Nothing planned yet'],
        ['Next 7 days', week, 'To ' + SS_DAYS[weekEnd.getDay()] + ' ' + ssShort(weekEnd)],
        ['Homes being pushed', push.length, push.length ? unbooked + ' not yet scheduled' : 'None right now'],
        ['Flagged homes', flagTotal, 'No social posts and/or PR']].forEach(function(k) {
+        if (d.checkOnly) return;
         html += '<div class="cr-kpi"><span class="cr-kpi-label">' + crEsc(k[0]) + '</span><span class="cr-kpi-value num">' + k[1] + '</span><span class="cr-kpi-note">' + crEsc(k[2]) + '</span></div>';
       });
-      html += '</div></section>';
+      if (!d.checkOnly) html += '</div></section>';
 
       html += scSection();
+      if (d.checkOnly) {
+        html += '<p class="cr-muted" style="font-size:13px;">Internal use only.</p></main></div>';
+        (document.querySelector('.container') || document.body).innerHTML = html;
+        window.scrollTo(0, scrollY);
+        return;
+      }
 
       // Coming up
       html += '<section class="cr-section" id="ss-coming"><h2 class="cr-h2">Coming up</h2><div class="ss-list">';
