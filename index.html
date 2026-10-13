@@ -540,6 +540,34 @@
     .ss-flag b { font-size: 14px; font-weight: 800; }
     .ss-flag .cr-kpi-value { font-size: 40px; }
     .ss-empty { padding: 18px 20px; font-size: 14px; color: #5B6B69; }
+    /* Staff check of flagged homes */
+    .sc-box { background: #FFFFFF; border: 2px solid #E7755C; border-radius: 20px; padding: 22px 24px; }
+    .sc-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; flex-wrap: wrap; }
+    .sc-prog { text-align: right; font-size: 13px; color: #5B6B69; } .sc-prog b { display: block; font: 400 28px 'Fraunces', Georgia, serif; color: #0E2524; }
+    .sc-bar { height: 6px; border-radius: 3px; background: #EFE8DC; margin-top: 6px; width: 160px; overflow: hidden; } .sc-bar i { display: block; height: 100%; background: #E7755C; }
+    .sc-who { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 14px 0 4px; font-size: 14px; color: #3D5652; }
+    .sc-who select, .sc-who input, .sc-form select, .sc-form input, .sc-form textarea { font: 600 14px 'Manrope', system-ui, sans-serif; color: #0E2524; border: 1px solid #D5CCBE; border-radius: 10px; padding: 9px 12px; background: #FBF9F5; }
+    .sc-home { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 14px; align-items: center; padding: 14px 0; border-top: 1px solid #EFE8DC; }
+    .sc-home b { font-size: 15px; color: #0E2524; } .sc-meta { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; margin-top: 5px; font-size: 13px; color: #5B6B69; }
+    .sc-note { font-style: italic; color: #3D5652; }
+    .sc-fl { font-size: 11px; font-weight: 800; padding: 3px 9px; border-radius: 10px; background: #F6E1DC; color: #8A2E1A; }
+    .sc-done { color: #1F6B45; font-weight: 700; } .sc-wait { color: #7A5410; font-weight: 700; }
+    .sc-acts { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+    .sc-b { min-height: 38px; padding: 0 14px; border-radius: 19px; border: 1px solid #D5CCBE; background: #FFFFFF; color: #0E2524; font: 800 13px 'Manrope', system-ui, sans-serif; cursor: pointer; }
+    .sc-b.ok { background: #E3F1EA; border-color: #B8E2C6; color: #1F6B45; } .sc-b.pri { background: #E7755C; border-color: #E7755C; color: #1E1410; }
+    .sc-b:disabled { opacity: 0.5; cursor: default; }
+    .sc-home.answered b { color: #5B6B69; }
+    .sc-form { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 10px; background: #FBF9F5; border: 1px solid #E7755C; border-radius: 14px; padding: 14px 16px; }
+    .sc-form label { font-size: 11.5px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #5B6B69; }
+    .sc-opts { display: flex; flex-wrap: wrap; gap: 6px; }
+    .sc-o { padding: 8px 12px; border-radius: 16px; border: 1px solid #D5CCBE; background: #FFFFFF; color: #3D5652; font: 700 13px 'Manrope', system-ui, sans-serif; cursor: pointer; }
+    .sc-o.on { background: #0B3D3A; border-color: #0B3D3A; color: #F6F2EB; }
+    .sc-two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .sc-saved { margin-top: 14px; padding: 12px 16px; border-radius: 14px; background: #0B3D3A; color: #F3EFE8; font-size: 14px; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+    .sc-offices { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-top: 14px; }
+    .sc-off { text-align: left; padding: 14px 16px; border-radius: 14px; border: 1px solid #E4DED4; background: #FFFFFF; cursor: pointer; font: inherit; color: #0E2524; }
+    .sc-off b { display: block; font-size: 15px; } .sc-off span { font-size: 13px; color: #5B6B69; }
+    @media (max-width: 700px) { .sc-home { grid-template-columns: 1fr; } .sc-acts { justify-content: flex-start; } .sc-two { grid-template-columns: 1fr; } }
     @media (max-width: 860px) {
       .ss-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .ss-row.post { grid-template-columns: 70px minmax(0, 1fr); gap: 6px 12px; }
@@ -2243,8 +2271,152 @@
       return '<span class="ss-office"><span class="ss-swatch" style="background:' + crEsc(ssAgentColor(item)) + ';"></span><span>' + crEsc(ssOfficeLabel(item)) + '</span></span>';
     }
 
+    // ===== Staff check of flagged homes (on the schedule link) =====
+    // Each answer saves as it's tapped; colleagues' answers appear within
+    // seconds. Marketing applies them (or approves the bigger changes).
+    var scState = { name: '', other: false, answers: [], open: '', form: {}, busy: false, timer: null };
+    var SC_FLAGS = ['On Hold', 'Private', 'Active Interest', 'No Social', 'No PR'];
+    function scStart() {
+      try { scState.name = localStorage.getItem('finest-staff-name') || ''; } catch (e) {}
+      scLoadAnswers();
+      if (!window.PREVIEW_REPORT && !scState.timer) scState.timer = setInterval(function() { if (!document.hidden) scLoadAnswers(); }, 15000);
+    }
+    function scCheck() { return ssData && ssData.staffCheck; }
+    function scClosed() { var d = new Date(scCheck().due); return !isNaN(d) && d < new Date(); }
+    function scLoadAnswers() {
+      if (window.PREVIEW_REPORT) return;
+      var done = function(r) {
+        if (!r || !r.success) return;
+        scState.answers = r.answers || [];
+        var a = document.activeElement;
+        if (scState.open || (a && /INPUT|TEXTAREA|SELECT/.test(a.tagName))) return; // don't redraw while someone is typing
+        ssRender();
+      };
+      if (window.google && google.script && google.script.run) { google.script.run.withSuccessHandler(done).getStaffCheckAnswers(reportToken); return; }
+      fetch(REPORT_DATA_URL + '?format=json&answers=1&token=' + encodeURIComponent(reportToken), { credentials: 'omit', redirect: 'follow' })
+        .then(function(r) { return r.json(); }).then(done).catch(function() {});
+    }
+    function scLatest() {
+      var by = {};
+      scState.answers.slice().sort(function(a, b) { return String(a.at) < String(b.at) ? -1 : 1; }).forEach(function(a) { by[a.propertyId] = a; });
+      return by;
+    }
+    function scAgo(iso) {
+      var m = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+      if (isNaN(m)) return '';
+      if (m < 1) return 'just now'; if (m < 60) return m + ' min ago';
+      var h = Math.round(m / 60); if (h < 24) return h + (h === 1 ? ' hour ago' : ' hours ago');
+      var d = new Date(iso); return d.getDate() + ' ' + SS_MONTHS[d.getMonth()].slice(0, 3);
+    }
+    function scDescribe(a, flag) {
+      if (a.answer === 'still') return a.note ? 'Still right, note updated' : 'Still right';
+      if (a.answer === 'fine') return 'Fine to post now';
+      var bits = [];
+      if (a.newFlag && a.newFlag !== flag) bits.push(a.newFlag === 'fine' ? 'fine to post' : 'change to ' + a.newFlag);
+      if (a.status) bits.push(a.status);
+      if (a.price) bits.push('price ' + a.price);
+      return 'Change sent: ' + (bits.join(', ') || 'note') + ' · waits for marketing';
+    }
+    function scSetName(v) {
+      if (v === '__other') { scState.other = true; scState.name = ''; ssRender(); return; }
+      scState.name = String(v || '').trim(); scState.other = false;
+      try { localStorage.setItem('finest-staff-name', scState.name); } catch (e) {}
+      ssRender();
+    }
+    function scOpen(pid) { scState.open = scState.open === pid ? '' : pid; scState.form = { flag: '', status: '', price: '', note: '' }; ssRender(); }
+    function scSend(payload, btn) {
+      if (scState.busy) return;
+      if (!scState.name) { alert('Choose your name first, at the top of the check.'); return; }
+      payload.token = reportToken; payload.name = scState.name;
+      scState.busy = true; if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+      var fail = function(msg) { scState.busy = false; if (btn) { btn.disabled = false; } alert(msg || 'That answer wasn’t saved. Please try again.'); ssRender(); };
+      var done = function(r) {
+        scState.busy = false;
+        if (!r || !r.success) { fail(r && r.error); return; }
+        scState.answers = r.answers || scState.answers; scState.open = '';
+        ssRender();
+      };
+      if (window.PREVIEW_REPORT) { scState.answers.push({ propertyId: payload.propertyId, name: payload.name, answer: payload.answer, newFlag: payload.newFlag || '', status: payload.status || '', price: payload.price || '', note: payload.note || '', at: new Date().toISOString() }); done({ success: true, answers: scState.answers }); return; }
+      if (window.google && google.script && google.script.run) { google.script.run.withSuccessHandler(done).withFailureHandler(function() { fail(); }).saveStaffCheckAnswer(payload); return; }
+      fetch(REPORT_DATA_URL, { method: 'POST', body: JSON.stringify(payload), credentials: 'omit', redirect: 'follow' })
+        .then(function(r) { return r.json(); }).then(done).catch(function() { fail(); });
+    }
+    function scStill(pid, btn) { scSend({ propertyId: pid, answer: 'still' }, btn); }
+    function scSave(pid, btn) {
+      var f = scState.form, root = document.getElementById('sc-form-' + pid);
+      if (root) { f.price = (root.querySelector('[data-k=price]') || {}).value || ''; f.note = (root.querySelector('[data-k=note]') || {}).value || ''; f.status = (root.querySelector('[data-k=status]') || {}).value || ''; }
+      if (!f.flag && !f.status && !f.price.trim() && !f.note.trim()) { alert('Choose what it should be, or add a note.'); return; }
+      var answer = f.flag === 'fine' && !f.status && !f.price.trim() ? 'fine' : (f.flag === 'keep' && !f.status && !f.price.trim() ? 'still' : 'change');
+      scSend({ propertyId: pid, answer: answer, newFlag: f.flag === 'keep' ? '' : f.flag, status: f.status, price: f.price.trim(), note: f.note.trim() }, btn);
+    }
+    function scPick(flag) { scState.form.flag = scState.form.flag === flag ? '' : flag; var root = document.getElementById('sc-form-' + scState.open); if (root) root.querySelectorAll('.sc-o').forEach(function(b) { b.classList.toggle('on', b.getAttribute('data-f') === scState.form.flag); }); }
+
+    function scSection() {
+      var sc = scCheck();
+      if (!sc || !sc.items || !sc.items.length) return '';
+      var latest = scLatest(), closed = scClosed(), due = new Date(sc.due);
+      var dueLabel = isNaN(due) ? '' : SS_DAYS[due.getDay()].slice(0, 3) + ' ' + due.getDate() + ' ' + SS_MONTHS[due.getMonth()].slice(0, 3);
+      var html = '<section class="cr-section" id="sc-check"><div class="sc-box">';
+      if (ssState.office === 'All offices') {
+        html += '<div class="sc-head"><div><h2 class="cr-h2">Check your homes</h2><p class="cr-muted" style="margin:6px 0 0;">Flagged homes get no social posts (and some no PR). Pick your office to check yours are still right' + (dueLabel ? ', by <b>' + crEsc(dueLabel) + '</b>' : '') + '.</p></div></div><div class="sc-offices">';
+        (ssData.offices || []).forEach(function(o) {
+          var mine = sc.items.filter(function(it) { return it.office === o; });
+          if (!mine.length) return;
+          var n = mine.filter(function(it) { return latest[it.propertyId]; }).length;
+          html += '<button type="button" class="sc-off" onclick="ssSetOffice(' + crEsc(JSON.stringify(o)) + ')"><b>' + crEsc(displayOffice(o)) + '</b><span>' + mine.length + (mine.length === 1 ? ' home' : ' homes') + ' · ' + (n === mine.length ? 'all checked' : n + ' checked') + '</span></button>';
+        });
+        return html + '</div></div></section>';
+      }
+      var items = sc.items.filter(function(it) { return it.office === ssState.office; });
+      if (!items.length) return '';
+      var answered = items.filter(function(it) { return latest[it.propertyId]; }).length;
+      items = items.slice().sort(function(a, b) { return (latest[a.propertyId] ? 1 : 0) - (latest[b.propertyId] ? 1 : 0); });
+      html += '<div class="sc-head"><div><h2 class="cr-h2">Check your homes</h2><p class="cr-muted" style="margin:6px 0 0; max-width:640px;">These ' + crEsc(displayOffice(ssState.office)) + ' homes are flagged, so they get no social posts (and some no PR). Is each still right?' + (dueLabel ? ' Answers by <b>' + crEsc(dueLabel) + '</b>.' : '') + ' Marketing approves any bigger change.</p></div>';
+      html += '<div class="sc-prog"><b>' + answered + ' of ' + items.length + '</b>checked<div class="sc-bar"><i style="width:' + Math.round(100 * answered / items.length) + '%"></i></div></div></div>';
+      if (closed) html += '<p class="cr-muted" style="margin:12px 0 0;"><b>This check closed on ' + crEsc(dueLabel) + '.</b> Thanks to everyone who answered.</p>';
+      else {
+        var names = (sc.staff && sc.staff[ssState.office]) || [];
+        html += '<div class="sc-who">Checking as ';
+        if (scState.other || (scState.name && names.indexOf(scState.name) === -1 && names.length)) html += '<input type="text" placeholder="Your name" value="' + crEsc(scState.name) + '" onchange="scSetName(this.value)" style="min-width:200px">';
+        else {
+          html += '<select onchange="scSetName(this.value)"><option value="">Choose your name…</option>';
+          names.forEach(function(n) { html += '<option' + (n === scState.name ? ' selected' : '') + '>' + crEsc(n) + '</option>'; });
+          html += '<option value="__other">Someone else…</option></select>';
+        }
+        html += '</div>';
+      }
+      items.forEach(function(it) {
+        var a = latest[it.propertyId], open = scState.open === it.propertyId && !closed;
+        html += '<div class="sc-home' + (a ? ' answered' : '') + '"><div><b>' + ssHome(it.propertyName || it.propertyId, it.url) + '</b><div class="sc-meta"><span class="sc-fl">' + crEsc(it.flag) + '</span>';
+        if (it.note) html += '<span class="sc-note">“' + crEsc(it.note) + '”</span>';
+        html += a ? '<span class="' + (a.answer === 'change' ? 'sc-wait' : 'sc-done') + '">✓ ' + crEsc(scDescribe(a, it.flag)) + ' · ' + crEsc(a.name) + ', ' + crEsc(scAgo(a.at)) + '</span>' : '<span>' + crEsc(it.reason || '') + '</span>';
+        html += '</div></div>';
+        if (!closed) {
+          var dis = scState.name ? '' : ' disabled title="Choose your name first"';
+          html += '<div class="sc-acts"><button type="button" class="sc-b' + (a && a.answer === 'still' ? ' ok' : '') + '"' + dis + ' onclick="scStill(' + crEsc(JSON.stringify(it.propertyId)) + ', this)">' + (a && a.answer === 'still' ? '✓ Still right' : 'Still right') + '</button>';
+          html += '<button type="button" class="sc-b' + (open ? ' pri' : '') + '"' + dis + ' onclick="scOpen(' + crEsc(JSON.stringify(it.propertyId)) + ')">Something’s changed</button></div>';
+        }
+        if (open) {
+          var pid = crEsc(JSON.stringify(it.propertyId));
+          html += '<div class="sc-form" id="sc-form-' + crEsc(it.propertyId) + '"><label>What should it be?</label><div class="sc-opts">';
+          [['fine', 'Fine to post now (remove the flag)'], ['keep', 'Keep ' + it.flag + ', just update the note']].concat(SC_FLAGS.filter(function(f) { return f !== it.flag; }).map(function(f) { return [f, f]; })).forEach(function(o) {
+            html += '<button type="button" class="sc-o' + (scState.form.flag === o[0] ? ' on' : '') + '" data-f="' + crEsc(o[0]) + '" onclick="scPick(' + crEsc(JSON.stringify(o[0])) + ')">' + crEsc(o[1]) + '</button>';
+          });
+          html += '</div><label>Anything else wrong? (optional)</label><div class="sc-two"><select data-k="status"><option value="">Status: ' + crEsc(it.status || 'as now') + ' (no change)</option>';
+          ['For Sale', 'Sale Agreed', 'Sold', 'Withdrawn'].filter(function(x) { return x !== it.status; }).forEach(function(x) { html += '<option>' + x + '</option>'; });
+          html += '</select><input data-k="price" type="text" placeholder="New price, if it’s changed (now ' + crEsc(it.price || '—') + ')"></div>';
+          html += '<textarea data-k="note" rows="2" placeholder="Note for marketing (optional)"></textarea>';
+          html += '<div class="sc-acts" style="justify-content:flex-start"><button type="button" class="sc-b pri" onclick="scSave(' + pid + ', this)">Save</button><button type="button" class="sc-b" onclick="scOpen(' + pid + ')">Cancel</button></div></div>';
+        }
+        html += '</div>';
+      });
+      if (!closed) html += '<div class="sc-saved"><span><b>✓ Saved as you go</b> · ' + answered + ' of ' + items.length + ' checked · ' + (items.length - answered) + ' to go</span><span>' + (answered === items.length ? 'All done, thank you!' : 'Colleagues’ answers appear here too') + '</span></div>';
+      return html + '</div></section>';
+    }
+
     function displayStaffSchedule(data, meta) {
       ssData = data; ssMeta = meta || {};
+      if (data.staffCheck && data.staffCheck.items && data.staffCheck.items.length) scStart();
       ssState = { office: 'All offices', flag: '', showLater: false, allNational: false };
       document.body.classList.add('client-report');
       document.title = 'Social schedule · Finest';
@@ -2341,6 +2513,8 @@
       });
       html += '</div></section>';
 
+      html += scSection();
+
       // Coming up
       html += '<section class="cr-section" id="ss-coming"><h2 class="cr-h2">Coming up</h2><div class="ss-list">';
       if (!days.length) html += '<div class="ss-empty">Nothing is planned' + (all ? '' : ' for ' + crEsc(displayOffice(ssState.office)) + ' homes') + ' yet.</div>';
@@ -2418,8 +2592,8 @@
         html += '</section>';
       }
 
-      // Flagged homes
-      if (flagTotal) {
+      // Flagged homes (not while a check is open: "Check your homes" covers them)
+      if (flagTotal && !(d.staffCheck && d.staffCheck.items && d.staffCheck.items.length && !scClosed())) {
         html += '<section class="cr-section" id="ss-flags"><div><h2 class="cr-h2">Flagged homes</h2>';
         html += '<p class="cr-muted" style="margin:6px 0 0;">Flagged homes get no social posts, and some no PR either. Please check your homes here are still right, so nothing misses out. Tap a group to see its homes.</p></div>';
         html += '<div class="ss-flags">';
