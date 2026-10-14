@@ -552,6 +552,13 @@
     .sc-who select, .sc-who input, .sc-form select, .sc-form input, .sc-form textarea { font: 600 14px 'Manrope', system-ui, sans-serif; color: #0E2524; border: 1px solid #D5CCBE; border-radius: 10px; padding: 9px 12px; background: #FBF9F5; }
     .sc-home { display: grid; grid-template-columns: minmax(0, 1fr) 130px auto; gap: 14px; align-items: center; padding: 14px 0; border-top: 1px solid #EFE8DC; }
     .sc-since { display: flex; flex-direction: column; font-size: 13px; color: #5B6B69; } .sc-since b { font-size: 14px; color: #0E2524; }
+    .sc-since em { font-style: normal; font-size: 12px; }
+    .sc-also { margin-top: 26px; border-top: 1px solid #EFE8DC; padding-top: 6px; }
+    .sc-also > summary { cursor: pointer; list-style: none; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; padding: 12px 14px; border-radius: 12px; background: #F3EFE8; }
+    .sc-also > summary::-webkit-details-marker { display: none; }
+    .sc-also > summary b { font-size: 15px; color: #0E2524; } .sc-also > summary b::before { content: '▸ '; color: #B8462C; } .sc-also[open] > summary b::before { content: '▾ '; }
+    .sc-also > summary span { font-size: 13px; color: #5B6B69; }
+    .sc-also .sc-group { background: transparent; padding: 10px 0 4px; } .sc-also .sc-group em { display: none; }
     .sc-test { margin-bottom: 12px; padding: 10px 14px; border-radius: 12px; background: #FDF1D8; color: #7A5410; font-size: 14px; font-weight: 700; }
     .sc-group { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin-top: 22px; padding: 10px 14px; border-radius: 12px; background: #F6EEE2; }
     .sc-group b { font-size: 15px; color: #0E2524; } .sc-group span { font-size: 13px; color: #5B6B69; font-weight: 700; } .sc-group em { flex-basis: 100%; font-style: normal; font-size: 13px; color: #3D5652; }
@@ -573,6 +580,10 @@
     .sc-b:disabled { opacity: 0.5; cursor: default; }
     .sc-home.answered b { color: #5B6B69; }
     .sc-form { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 10px; background: #FBF9F5; border: 1px solid #E7755C; border-radius: 14px; padding: 14px 16px; }
+    .sc-add { margin-top: 26px; border-top: 1px solid #EFE8DC; padding-top: 16px; display: flex; flex-direction: column; gap: 10px; }
+    .sc-add-head { display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; }
+    .sc-add-head b { display: block; font-size: 15px; color: #0E2524; } .sc-add-head span { font-size: 13px; color: #5B6B69; }
+    .sc-add-done { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; font-size: 13px; padding: 8px 0; border-top: 1px solid #F3EFE8; }
     .sc-form label { font-size: 11.5px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #5B6B69; }
     .sc-opts { display: flex; flex-wrap: wrap; gap: 6px; }
     .sc-o { padding: 8px 12px; border-radius: 16px; border: 1px solid #D5CCBE; background: #FFFFFF; color: #3D5652; font: 700 13px 'Manrope', system-ui, sans-serif; cursor: pointer; }
@@ -2399,6 +2410,36 @@
       var answer = f.flag === 'fine' && !f.status && !f.price.trim() ? 'fine' : (f.flag === 'keep' && !f.status && !f.price.trim() ? 'still' : 'change');
       scSend({ propertyId: pid, answer: answer, newFlag: f.flag === 'keep' ? '' : f.flag, status: f.status, price: f.price.trim(), note: f.note.trim() }, btn);
     }
+    function scSaveAdd(btn) {
+      var root = document.getElementById('sc-form-__add'); if (!root) return;
+      var pid = (root.querySelector('[data-k=home]') || {}).value || '', note = ((root.querySelector('[data-k=note]') || {}).value || '').trim();
+      if (!pid) { alert('Choose the home first.'); return; }
+      if (!scState.form.flag || scState.form.flag === 'fine') { alert('Choose which flag it needs.'); return; }
+      if (!note) { alert('Add a short note saying why, so marketing can approve it.'); return; }
+      scSend({ propertyId: pid, answer: 'change', newFlag: scState.form.flag, note: note }, btn);
+    }
+    // "Flag another home": homes for sale with no flag, for this office.
+    function scAddSection(sc, latest) {
+      var others = (sc.others || []).filter(function(it) { return it.office === ssState.office; });
+      if (!others.length) return '';
+      var asked = others.filter(function(it) { return latest[it.propertyId]; });
+      var html = '<div class="sc-add"><div class="sc-add-head"><div><b>Flag another home</b><span>A home that isn’t flagged but should be? Tell us here and marketing will approve it.</span></div>' +
+        (scState.open === '__add' ? '' : '<button type="button" class="sc-b"' + (scState.name ? '' : ' disabled title="Choose your name first"') + ' onclick="scOpen(\'__add\')">Flag a home</button>') + '</div>';
+      asked.forEach(function(it) {
+        var a = latest[it.propertyId];
+        html += '<div class="sc-add-done"><b>' + ssHome(it.propertyName || it.propertyId, it.url) + '</b><span class="sc-wait">✓ Flag as ' + crEsc(a.newFlag) + ' · ' + crEsc(a.name) + ', ' + crEsc(scAgo(a.at)) + ' · waits for marketing</span>' + (a.note ? '<span class="sc-note">“' + crEsc(a.note) + '”</span>' : '') + '</div>';
+      });
+      if (scState.open === '__add') {
+        html += '<div class="sc-form" id="sc-form-__add"><label>Which home?</label><select data-k="home"><option value="">Choose a home…</option>';
+        others.forEach(function(it) { if (!latest[it.propertyId]) html += '<option value="' + crEsc(it.propertyId) + '">' + crEsc(it.propertyName || it.propertyId) + (it.price ? ' · ' + crEsc(it.price) : '') + '</option>'; });
+        html += '</select><label>Which flag?</label><div class="sc-opts">';
+        SC_FLAGS.forEach(function(f) { html += '<button type="button" class="sc-o sc-tip' + (scState.form.flag === f ? ' on' : '') + '" data-f="' + crEsc(f) + '"' + scTip(f) + ' onclick="scPick(' + crEsc(JSON.stringify(f)) + ')">' + crEsc(f) + '</button>'; });
+        html += '</div><p class="sc-means" id="sc-means">' + crEsc(SC_MEANS[scState.form.flag] || 'Hover or tap an option to see what it means.') + '</p>';
+        html += '<label>Why?</label><textarea data-k="note" rows="2" placeholder="e.g. Vendor has asked for no social posts until the spring"></textarea>';
+        html += '<div class="sc-acts" style="justify-content:flex-start"><button type="button" class="sc-b pri" onclick="scSaveAdd(this)">Send to marketing</button><button type="button" class="sc-b" onclick="scOpen(\'__add\')">Cancel</button></div></div>';
+      }
+      return html + '</div>';
+    }
     function scPick(flag) {
       scState.form.flag = scState.form.flag === flag ? '' : flag;
       var root = document.getElementById('sc-form-' + scState.open);
@@ -2406,49 +2447,12 @@
       var m = document.getElementById('sc-means'); if (m) m.textContent = SC_MEANS[scState.form.flag] || 'Hover or tap an option to see what it means.';
     }
 
-    function scSection() {
-      var sc = scCheck();
-      if (!sc || !sc.items || !sc.items.length) return '';
-      var latest = scLatest(), closed = scClosed(), due = new Date(sc.due);
-      var dueLabel = isNaN(due) ? '' : SS_DAYS[due.getDay()].slice(0, 3) + ' ' + due.getDate() + ' ' + SS_MONTHS[due.getMonth()].slice(0, 3);
-      var html = '<section class="cr-section" id="sc-check">' + (SC_TEST ? '<div class="sc-test">Test mode: nothing you do here is saved. Remove “&amp;test=1” from the link to answer for real.</div>' : '') + '<div class="sc-box">';
-      if (ssState.office === 'All offices') {
-        html += '<div class="sc-head"><div><h2 class="cr-h2">Check your homes</h2><p class="cr-muted" style="margin:6px 0 0;">Flagged homes get no social posts (and some no PR). Pick your office to check yours are still right' + (dueLabel ? ', by <b>' + crEsc(dueLabel) + '</b>' : '') + '.</p></div></div><div class="sc-offices">';
-        (ssData.offices || []).forEach(function(o) {
-          var mine = sc.items.filter(function(it) { return it.office === o; });
-          if (!mine.length) return;
-          var n = mine.filter(function(it) { return latest[it.propertyId]; }).length;
-          html += '<button type="button" class="sc-off" onclick="ssSetOffice(' + crEsc(JSON.stringify(o)) + ')"><b>' + crEsc(displayOffice(o)) + '</b><span>' + mine.length + (mine.length === 1 ? ' home' : ' homes') + ' · ' + (n === mine.length ? 'all checked' : n + ' checked') + '</span></button>';
-        });
-        return html + '</div></div></section>';
-      }
-      var items = sc.items.filter(function(it) { return it.office === ssState.office; });
-      if (!items.length) return '';
-      var answered = items.filter(function(it) { return latest[it.propertyId]; }).length;
-      items = items.slice().sort(function(a, b) { return (latest[a.propertyId] ? 1 : 0) - (latest[b.propertyId] ? 1 : 0); });
-      html += '<div class="sc-head"><div><h2 class="cr-h2">' + (ssData.checkOnly ? crEsc(displayOffice(ssState.office)) + ' homes' : 'Check your homes') + '</h2><p class="cr-muted" style="margin:6px 0 0; max-width:640px;">These ' + crEsc(displayOffice(ssState.office)) + ' homes are flagged, so they get no social posts (and some no PR). Is each still right?' + (dueLabel ? ' Answers by <b>' + crEsc(dueLabel) + '</b>.' : '') + ' Marketing approves any bigger change.</p></div>';
-      html += '<div class="sc-prog"><b>' + answered + ' of ' + items.length + '</b>checked<div class="sc-bar"><i style="width:' + Math.round(100 * answered / items.length) + '%"></i></div></div></div>';
-      if (closed) html += '<p class="cr-muted" style="margin:12px 0 0;"><b>This check closed on ' + crEsc(dueLabel) + '.</b> Thanks to everyone who answered.</p>';
-      else {
-        var names = (sc.staff && sc.staff[ssState.office]) || [];
-        if (scState.other !== ssState.office) { scState.other = ''; scState.name = scNameFor(ssState.office, names); }
-        html += '<div class="sc-who">Checking as ';
-        if (scState.other || (scState.name && names.indexOf(scState.name) === -1 && names.length)) {
-          html += '<input type="text" placeholder="Your name" value="' + crEsc(scState.name) + '" onchange="scSetName(this.value)" style="min-width:200px">';
-          if (names.length) html += '<a href="#" onclick="scState.other=\'\'; delete scState.byOffice[ssState.office]; ssRender(); return false;" style="color:#B8462C; font-weight:700;">Choose from the list</a>';
-        }
-        else {
-          html += '<select onchange="scSetName(this.value)"><option value="">Choose your name…</option>';
-          names.forEach(function(n) { html += '<option' + (n === scState.name ? ' selected' : '') + '>' + crEsc(n) + '</option>'; });
-          html += '<option value="__other">Someone else…</option></select>';
-        }
-        html += '</div>';
-      }
-      html += '<div class="sc-colhead"><span>Home</span><span>Flagged since</span><span></span></div>';
-      var order = SC_FLAGS.concat(items.map(function(it) { return it.flag; }).filter(function(f, i, arr) { return SC_FLAGS.indexOf(f) === -1 && arr.indexOf(f) === i; }));
+    function scRows(list, latest, closed, optional) {
+      var html = '';
+      var order = SC_FLAGS.concat(list.map(function(it) { return it.flag; }).filter(function(f, i, arr) { return SC_FLAGS.indexOf(f) === -1 && arr.indexOf(f) === i; }));
       var grouped = [];
       order.forEach(function(f) {
-        var g = items.filter(function(it) { return it.flag === f; });
+        var g = list.filter(function(it) { return it.flag === f; });
         if (!g.length) return;
         var done = g.filter(function(it) { return latest[it.propertyId]; }).length;
         grouped.push({ head: '<div class="sc-group"><b>' + crEsc(f) + '</b><span>' + g.length + (g.length === 1 ? ' home' : ' homes') + (done ? ' · ' + done + ' checked' : '') + '</span><em>' + crEsc(SC_MEANS[f] || '') + '</em></div>' });
@@ -2461,7 +2465,7 @@
         html += '<div class="sc-home' + (a ? ' answered' : '') + '"><div class="sc-main"><b>' + ssHome(it.propertyName || it.propertyId, it.url) + '</b><div class="sc-meta"><span class="sc-fl sc-tip" tabindex="0"' + scTip(it.flag) + '>' + crEsc(it.flag) + '</span>';
         if (it.note) html += '<span class="sc-note">“' + crEsc(it.note) + '”</span>';
         if (a) html += '<span class="' + (a.answer === 'change' ? 'sc-wait' : 'sc-done') + '">✓ ' + crEsc(scDescribe(a, it.flag)) + ' · ' + crEsc(a.name) + ', ' + crEsc(scAgo(a.at)) + '</span>';
-        html += '</div></div><div class="sc-since">' + (it.setDate ? '<span>' + crEsc(scDate(it.setDate)) + '</span>' : '<span>—</span>') + (daysN ? '<b>' + crEsc(String(daysN)) + ' days</b>' : '') + '</div>';
+        html += '</div></div><div class="sc-since">' + (it.setDate ? '<span>' + crEsc(scDate(it.setDate)) + '</span>' : '<span>—</span>') + (optional ? (it.setBy ? '<em>by ' + crEsc(it.setBy) + '</em>' : '') + (it.reviewDate ? '<em>review ' + crEsc(scDate(it.reviewDate)) + '</em>' : '') : (daysN ? '<b>' + crEsc(String(daysN)) + ' days</b>' : '')) + '</div>';
         if (!closed) {
           var dis = scState.name ? '' : ' disabled title="Choose your name first"';
           html += '<div class="sc-acts"><button type="button" class="sc-b' + (a && a.answer === 'still' ? ' ok' : '') + '"' + dis + ' onclick="scStill(' + crEsc(JSON.stringify(it.propertyId)) + ', this)">' + (a && a.answer === 'still' ? '✓ Still right' : 'Still right') + '</button>';
@@ -2481,6 +2485,54 @@
         }
         html += '</div>';
       });
+      return html;
+    }
+    function scSection() {
+      var sc = scCheck();
+      if (!sc || !sc.items || !sc.items.length) return '';
+      var latest = scLatest(), closed = scClosed(), due = new Date(sc.due);
+      var dueLabel = isNaN(due) ? '' : SS_DAYS[due.getDay()].slice(0, 3) + ' ' + due.getDate() + ' ' + SS_MONTHS[due.getMonth()].slice(0, 3);
+      var html = '<section class="cr-section" id="sc-check">' + (SC_TEST ? '<div class="sc-test">Test mode: nothing you do here is saved. Remove “&amp;test=1” from the link to answer for real.</div>' : '') + '<div class="sc-box">';
+      if (ssState.office === 'All offices') {
+        html += '<div class="sc-head"><div><h2 class="cr-h2">Check your homes</h2><p class="cr-muted" style="margin:6px 0 0;">Flagged homes get no social posts (and some no PR). Pick your office to check yours are still right' + (dueLabel ? ', by <b>' + crEsc(dueLabel) + '</b>' : '') + '.</p></div></div><div class="sc-offices">';
+        (ssData.offices || []).forEach(function(o) {
+          var mine = sc.items.filter(function(it) { return it.office === o && it.due !== false; });
+          if (!mine.length) return;
+          var n = mine.filter(function(it) { return latest[it.propertyId]; }).length;
+          html += '<button type="button" class="sc-off" onclick="ssSetOffice(' + crEsc(JSON.stringify(o)) + ')"><b>' + crEsc(displayOffice(o)) + '</b><span>' + mine.length + (mine.length === 1 ? ' home' : ' homes') + ' · ' + (n === mine.length ? 'all checked' : n + ' checked') + '</span></button>';
+        });
+        return html + '</div></div></section>';
+      }
+      var all = sc.items.filter(function(it) { return it.office === ssState.office; });
+      var items = all.filter(function(it) { return it.due !== false; }), also = all.filter(function(it) { return it.due === false; });
+      if (!items.length) return '';
+      var answered = items.filter(function(it) { return latest[it.propertyId]; }).length;
+      items = items.slice().sort(function(a, b) { return (latest[a.propertyId] ? 1 : 0) - (latest[b.propertyId] ? 1 : 0); });
+      html += '<div class="sc-head"><div><h2 class="cr-h2">' + (ssData.checkOnly ? crEsc(displayOffice(ssState.office)) + ' homes' : 'Check your homes') + '</h2><p class="cr-muted" style="margin:6px 0 0; max-width:640px;">These ' + crEsc(displayOffice(ssState.office)) + ' homes are flagged, so they get no social posts (and some no PR). Is each still right?' + (dueLabel ? ' Answers by <b>' + crEsc(dueLabel) + '</b>.' : '') + ' Marketing approves any bigger change.</p><p class="cr-muted" style="margin:6px 0 0; max-width:640px; font-size:13px;">Homes come up for checking 90 days after their flag was last confirmed' + (also.length ? '; the ' + also.length + ' checked more recently are listed at the bottom' : '') + '.</p></div>';
+      html += '<div class="sc-prog"><b>' + answered + ' of ' + items.length + '</b>checked<div class="sc-bar"><i style="width:' + Math.round(100 * answered / items.length) + '%"></i></div></div></div>';
+      if (closed) html += '<p class="cr-muted" style="margin:12px 0 0;"><b>This check closed on ' + crEsc(dueLabel) + '.</b> Thanks to everyone who answered.</p>';
+      else {
+        var names = (sc.staff && sc.staff[ssState.office]) || [];
+        if (scState.other !== ssState.office) { scState.other = ''; scState.name = scNameFor(ssState.office, names); }
+        html += '<div class="sc-who">Checking as ';
+        if (scState.other || (scState.name && names.indexOf(scState.name) === -1 && names.length)) {
+          html += '<input type="text" placeholder="Your name" value="' + crEsc(scState.name) + '" onchange="scSetName(this.value)" style="min-width:200px">';
+          if (names.length) html += '<a href="#" onclick="scState.other=\'\'; delete scState.byOffice[ssState.office]; ssRender(); return false;" style="color:#B8462C; font-weight:700;">Choose from the list</a>';
+        }
+        else {
+          html += '<select onchange="scSetName(this.value)"><option value="">Choose your name…</option>';
+          names.forEach(function(n) { html += '<option' + (n === scState.name ? ' selected' : '') + '>' + crEsc(n) + '</option>'; });
+          html += '<option value="__other">Someone else…</option></select>';
+        }
+        html += '</div>';
+      }
+      html += '<div class="sc-colhead"><span>Home</span><span>Flagged since</span><span></span></div>';
+      html += scRows(items, latest, closed, false);
+      if (also.length) {
+        var alsoDone = also.filter(function(it) { return latest[it.propertyId]; }).length;
+        html += '<details class="sc-also"' + (scState.alsoOpen ? ' open' : '') + ' ontoggle="scState.alsoOpen=this.open"><summary><b>Also flagged, checked recently (' + also.length + ')</b><span>Nothing needed unless something’s changed' + (alsoDone ? ' · ' + alsoDone + ' answered' : '') + '</span></summary>' + scRows(also, latest, closed, true) + '</details>';
+      }
+      if (!closed) html += scAddSection(sc, latest);
       if (!closed) html += '<div class="sc-saved"><span><b>✓ Saved as you go</b> · ' + answered + ' of ' + items.length + ' checked · ' + (items.length - answered) + ' to go</span><span>' + (answered === items.length ? 'All done, thank you!' : 'Colleagues’ answers appear here too') + '</span></div>';
       return html + '</div></section>';
     }
