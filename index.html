@@ -2288,7 +2288,7 @@
     // ===== Staff check of flagged homes (on the schedule link) =====
     // Each answer saves as it's tapped; colleagues' answers appear within
     // seconds. Marketing applies them (or approves the bigger changes).
-    var scState = { name: '', other: false, answers: [], open: '', form: {}, busy: false, timer: null, seq: 0, mine: [] };
+    var scState = { name: '', other: '', byOffice: {}, answers: [], open: '', form: {}, busy: false, timer: null, seq: 0, mine: [] };
     // Test mode (&test=1 on the link): everything works, nothing is saved.
     var SC_TEST = /[?&]test=1(&|$)/.test(window.location.search);
     function scLocalOnly() { return !!window.PREVIEW_REPORT || SC_TEST; }
@@ -2304,7 +2304,7 @@
     };
     function scTip(key) { var t = SC_MEANS[key]; return t ? ' data-tip="' + crEsc(t) + '"' : ''; }
     function scStart() {
-      try { scState.name = localStorage.getItem('finest-staff-name') || ''; } catch (e) {}
+      try { scState.byOffice = JSON.parse(localStorage.getItem('finest-staff-names') || '{}') || {}; } catch (e) { scState.byOffice = {}; }
       scLoadAnswers();
       if (!scLocalOnly() && !scState.timer) scState.timer = setInterval(function() { if (!document.hidden) scLoadAnswers(); }, 15000);
     }
@@ -2356,10 +2356,18 @@
     }
     function scDate(uk) { var d = ssParseDate(uk); return d ? d.getDate() + ' ' + SS_MONTHS[d.getMonth()].slice(0, 3) + ' ' + d.getFullYear() : uk; }
     function scSetName(v) {
-      if (v === '__other') { scState.other = true; scState.name = ''; ssRender(); return; }
-      scState.name = String(v || '').trim(); scState.other = false;
-      try { localStorage.setItem('finest-staff-name', scState.name); } catch (e) {}
+      if (v === '__other') { scState.other = ssState.office; scState.name = ''; ssRender(); return; }
+      scState.name = String(v || '').trim(); scState.other = '';
+      scState.byOffice[ssState.office] = scState.name;
+      try { localStorage.setItem('finest-staff-names', JSON.stringify(scState.byOffice)); } catch (e) {}
       ssRender();
+    }
+    // Who is answering for this office: the name they picked here before,
+    // or the only person in an office of one. Offices with several people choose.
+    function scNameFor(office, names) {
+      var nm = scState.byOffice[office] || '';
+      if (!nm && names.length === 1) nm = names[0];
+      return nm;
     }
     function scOpen(pid) { scState.open = scState.open === pid ? '' : pid; scState.form = { flag: '', status: '', price: '', note: '' }; ssRender(); }
     function scSend(payload, btn) {
@@ -2423,10 +2431,11 @@
       if (closed) html += '<p class="cr-muted" style="margin:12px 0 0;"><b>This check closed on ' + crEsc(dueLabel) + '.</b> Thanks to everyone who answered.</p>';
       else {
         var names = (sc.staff && sc.staff[ssState.office]) || [];
+        if (scState.other !== ssState.office) { scState.other = ''; scState.name = scNameFor(ssState.office, names); }
         html += '<div class="sc-who">Checking as ';
         if (scState.other || (scState.name && names.indexOf(scState.name) === -1 && names.length)) {
           html += '<input type="text" placeholder="Your name" value="' + crEsc(scState.name) + '" onchange="scSetName(this.value)" style="min-width:200px">';
-          if (names.length) html += '<a href="#" onclick="scState.other=false; scState.name=\'\'; ssRender(); return false;" style="color:#B8462C; font-weight:700;">Choose from the list</a>';
+          if (names.length) html += '<a href="#" onclick="scState.other=\'\'; delete scState.byOffice[ssState.office]; ssRender(); return false;" style="color:#B8462C; font-weight:700;">Choose from the list</a>';
         }
         else {
           html += '<select onchange="scSetName(this.value)"><option value="">Choose your name…</option>';
