@@ -2497,19 +2497,22 @@
         html += '<div class="sc-head"><div><h2 class="cr-h2">Check your homes</h2><p class="cr-muted" style="margin:6px 0 0;">Flagged homes get no social posts (and some no PR). Pick your office to check yours are still right' + (dueLabel ? ', by <b>' + crEsc(dueLabel) + '</b>' : '') + '.</p></div></div><div class="sc-offices">';
         (ssData.offices || []).forEach(function(o) {
           var mine = sc.items.filter(function(it) { return it.office === o && it.due !== false; });
-          if (!mine.length) return;
+          var any = sc.items.concat(sc.others || []).some(function(it) { return it.office === o; });
+          if (!any) return;
           var n = mine.filter(function(it) { return latest[it.propertyId]; }).length;
-          html += '<button type="button" class="sc-off" onclick="ssSetOffice(' + crEsc(JSON.stringify(o)) + ')"><b>' + crEsc(displayOffice(o)) + '</b><span>' + mine.length + (mine.length === 1 ? ' home' : ' homes') + ' · ' + (n === mine.length ? 'all checked' : n + ' checked') + '</span></button>';
+          html += '<button type="button" class="sc-off" onclick="ssSetOffice(' + crEsc(JSON.stringify(o)) + ')"><b>' + crEsc(displayOffice(o)) + '</b><span>' + (mine.length ? mine.length + (mine.length === 1 ? ' home' : ' homes') + ' · ' + (n === mine.length ? 'all checked' : n + ' checked') : 'nothing due · flag a home') + '</span></button>';
         });
         return html + '</div></div></section>';
       }
       var all = sc.items.filter(function(it) { return it.office === ssState.office; });
       var items = all.filter(function(it) { return it.due !== false; }), also = all.filter(function(it) { return it.due === false; });
-      if (!items.length) return '';
+      var canAdd = (sc.others || []).some(function(it) { return it.office === ssState.office; });
+      if (!items.length && !also.length && !canAdd) return '';
       var answered = items.filter(function(it) { return latest[it.propertyId]; }).length;
       items = items.slice().sort(function(a, b) { return (latest[a.propertyId] ? 1 : 0) - (latest[b.propertyId] ? 1 : 0); });
-      html += '<div class="sc-head"><div><h2 class="cr-h2">' + (ssData.checkOnly ? crEsc(displayOffice(ssState.office)) + ' homes' : 'Check your homes') + '</h2><p class="cr-muted" style="margin:6px 0 0; max-width:640px;">These ' + crEsc(displayOffice(ssState.office)) + ' homes are flagged, so they get no social posts (and some no PR). Is each still right?' + (dueLabel ? ' Answers by <b>' + crEsc(dueLabel) + '</b>.' : '') + ' Marketing approves any bigger change.</p><p class="cr-muted" style="margin:6px 0 0; max-width:640px; font-size:13px;">Homes come up for checking 90 days after their flag was last confirmed' + (also.length ? '; the ' + also.length + ' checked more recently are listed at the bottom' : '') + '.</p></div>';
-      html += '<div class="sc-prog"><b>' + answered + ' of ' + items.length + '</b>checked<div class="sc-bar"><i style="width:' + Math.round(100 * answered / items.length) + '%"></i></div></div></div>';
+      html += '<div class="sc-head"><div><h2 class="cr-h2">' + (ssData.checkOnly ? crEsc(displayOffice(ssState.office)) + ' homes' : 'Check your homes') + '</h2><p class="cr-muted" style="margin:6px 0 0; max-width:640px;">These ' + crEsc(displayOffice(ssState.office)) + ' ' + (items.length ? 'homes are flagged, so they get no social posts (and some no PR). Is each still right?' + (dueLabel ? ' Answers by <b>' + crEsc(dueLabel) + '</b>.' : '') + ' Marketing approves any bigger change.' : 'homes have no flags due a check right now, so there’s nothing to answer. If one of your homes should be flagged (no social posts or no PR), use <b>Flag another home</b> below.') + '</p><p class="cr-muted" style="margin:6px 0 0; max-width:640px; font-size:13px;">Homes come up for checking 90 days after their flag was last confirmed' + (also.length ? '; the ' + also.length + ' checked more recently are listed at the bottom' : '') + '.</p></div>';
+      if (items.length) html += '<div class="sc-prog"><b>' + answered + ' of ' + items.length + '</b>checked<div class="sc-bar"><i style="width:' + Math.round(100 * answered / items.length) + '%"></i></div></div>';
+      html += '</div>';
       if (closed) html += '<p class="cr-muted" style="margin:12px 0 0;"><b>This check closed on ' + crEsc(dueLabel) + '.</b> Thanks to everyone who answered.</p>';
       else {
         var names = (sc.staff && sc.staff[ssState.office]) || [];
@@ -2526,14 +2529,14 @@
         }
         html += '</div>';
       }
-      html += '<div class="sc-colhead"><span>Home</span><span>Flagged since</span><span></span></div>';
+      if (items.length) html += '<div class="sc-colhead"><span>Home</span><span>Flagged since</span><span></span></div>';
       html += scRows(items, latest, closed, false);
       if (also.length) {
         var alsoDone = also.filter(function(it) { return latest[it.propertyId]; }).length;
         html += '<details class="sc-also"' + (scState.alsoOpen ? ' open' : '') + ' ontoggle="scState.alsoOpen=this.open"><summary><b>Also flagged, checked recently (' + also.length + ')</b><span>Nothing needed unless something’s changed' + (alsoDone ? ' · ' + alsoDone + ' answered' : '') + '</span></summary>' + scRows(also, latest, closed, true) + '</details>';
       }
       if (!closed) html += scAddSection(sc, latest);
-      if (!closed) html += '<div class="sc-saved"><span><b>✓ Saved as you go</b> · ' + answered + ' of ' + items.length + ' checked · ' + (items.length - answered) + ' to go</span><span>' + (answered === items.length ? 'All done, thank you!' : 'Colleagues’ answers appear here too') + '</span></div>';
+      if (!closed && items.length) html += '<div class="sc-saved"><span><b>✓ Saved as you go</b> · ' + answered + ' of ' + items.length + ' checked · ' + (items.length - answered) + ' to go</span><span>' + (answered === items.length ? 'All done, thank you!' : 'Colleagues’ answers appear here too') + '</span></div>';
       return html + '</div></section>';
     }
 
@@ -2623,7 +2626,7 @@
       html += '</div><div class="ms-offices" role="group" aria-label="Office">';
       ['All offices'].concat(d.offices || []).forEach(function(o) {
         // A check on its own: only offices with homes to check.
-        if (d.checkOnly && o !== 'All offices' && !(d.staffCheck.items || []).some(function(it) { return it.office === o; })) return;
+        if (d.checkOnly && o !== 'All offices' && !(d.staffCheck.items || []).concat(d.staffCheck.others || []).some(function(it) { return it.office === o; })) return;
         html += '<button type="button" class="ms-office' + (o === ssState.office ? ' on' : '') + '" onclick="ssSetOffice(' + crEsc(JSON.stringify(o)) + ')">' + crEsc(o) + '</button>';
       });
       html += '</div>';
