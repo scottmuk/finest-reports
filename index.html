@@ -2465,7 +2465,7 @@
         html += '<div class="sc-home' + (a ? ' answered' : '') + '"><div class="sc-main"><b>' + ssHome(it.propertyName || it.propertyId, it.url) + '</b><div class="sc-meta"><span class="sc-fl sc-tip" tabindex="0"' + scTip(it.flag) + '>' + crEsc(it.flag) + '</span>';
         if (it.note) html += '<span class="sc-note">“' + crEsc(it.note) + '”</span>';
         if (a) html += '<span class="' + (a.answer === 'change' ? 'sc-wait' : 'sc-done') + '">✓ ' + crEsc(scDescribe(a, it.flag)) + ' · ' + crEsc(a.name) + ', ' + crEsc(scAgo(a.at)) + '</span>';
-        html += '</div></div><div class="sc-since">' + (it.setDate ? '<span>' + crEsc(scDate(it.setDate)) + '</span>' : '<span>—</span>') + (optional ? (it.setBy ? '<em>by ' + crEsc(it.setBy) + '</em>' : '') + (it.reviewDate ? '<em>review ' + crEsc(scDate(it.reviewDate)) + '</em>' : '') : (daysN ? '<b>' + crEsc(String(daysN)) + ' days</b>' : '')) + '</div>';
+        html += '</div></div><div class="sc-since">' + (it.setDate ? '<span>' + crEsc(scDate(it.setDate)) + '</span>' : '<span>—</span>') + (optional ? (it.setBy ? '<em>by ' + crEsc(/@/.test(it.setBy) ? 'Marketing' : it.setBy) + '</em>' : '') + (it.reviewDate ? '<em>review ' + crEsc(scDate(it.reviewDate)) + '</em>' : '') : (daysN ? '<b>' + crEsc(String(daysN)) + ' days</b>' : '')) + '</div>';
         if (!closed) {
           var dis = scState.name ? '' : ' disabled title="Choose your name first"';
           html += '<div class="sc-acts"><button type="button" class="sc-b' + (a && a.answer === 'still' ? ' ok' : '') + '"' + dis + ' onclick="scStill(' + crEsc(JSON.stringify(it.propertyId)) + ', this)">' + (a && a.answer === 'still' ? '✓ Still right' : 'Still right') + '</button>';
